@@ -1,0 +1,9 @@
+celery==5.3.6
+Flask==3.0.0
+flower==2.0.1
+func-timeout==4.3.5
+OdooRPC==0.10.1
+PyJWT==2.8.0
+redis==5.0.1
+selenium==4.16.0
+webdriver-manager==4.0.1
