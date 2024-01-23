@@ -39,7 +39,7 @@ class SeleniumProcesses:
         self.goflow_password = selenium_config.get('GOFLOW_PASSWORD')
 
         # ODOORPC CREDENTIALS
-        odoo_connection_config = selenium_config.get('local_config')
+        odoo_connection_config = selenium_config.get('production_config')
         if odoo_connection_config:
             self.odoo_username = odoo_connection_config.get('ODOO_USERNAME')
             self.odoo_password = odoo_connection_config.get('ODOO_PASSWORD')
@@ -47,6 +47,7 @@ class SeleniumProcesses:
             self.odoo_port = odoo_connection_config.get('ODOO_PORT')
             self.odoo_db = odoo_connection_config.get('ODOO_DATABASE')
             self.use_odoo_rpc = odoo_connection_config.get('use_odoo_rpc')
+        print(self.odoo_username, self.odoo_password, self.odoo_url, self.odoo_port, self.odoo_db)
 
     def login(self):
         self.driver.get(self.goflow_url)
@@ -161,9 +162,10 @@ class SeleniumProcesses:
 
         if matching_files:
             found_file_path = os.path.join(self.download_directory, matching_files[0])
-
+        print(matching_files)
         if found_file_path:
             success, odoo_obj = self.connect_odoo_rpc()
+            print(odoo_obj, success)
             if success:
                 if self.use_odoo_rpc:
                     picking_obj = odoo_obj.env['stock.picking']
@@ -181,25 +183,34 @@ class SeleniumProcesses:
                 else:
                     uid = odoo_obj[0]
                     sock = odoo_obj[1]
+                    print(uid, success)
                     with open(found_file_path, "rb") as zip_file:
+                        print(1)
                         data = zip_file.read()
+                        print(2)
                         sock.execute(self.odoo_db, uid, self.odoo_password, 'stock.picking', 'write', int(picking_id),
                                      {'goflow_document': base64.b64encode(data or b'').decode("ascii"),
                                       'goflow_routing_status': 'doc_generated',
                                       'rpa_status': False})
+                        print(3)
                     go_flow_log_id = sock.execute(self.odoo_db, uid, self.odoo_password, 'go.flow.packaging.update.log',
                                                   'search',
                                                   [('order_ref', '=', int(task_id))])
+                    print("4")
 
                     sock.execute(self.odoo_db, uid, self.odoo_password, 'go.flow.packaging.update.log', 'write',
                                  go_flow_log_id[0],
                                  {'request_status': 'completed'})
+                    print("5")
             else:
                 raise odoo_obj
-
+            print("6")
             if not os.path.exists(self.move_path):
+                print("7")
                 os.mkdir(self.move_path)
+                print("8")
             shutil.move(found_file_path, self.move_path + '/' + matching_files[0])
+            print("9")
 
     def _update_failed_status(self, vals):
         success, odoo_obj = self.connect_odoo_rpc()
@@ -242,6 +253,7 @@ class SeleniumProcesses:
                 sock_common = xc.ServerProxy(self.odoo_url + '/xmlrpc/common', allow_none=True)
                 uid = sock_common.login(self.odoo_db, self.odoo_username, self.odoo_password)
                 sock = xc.ServerProxy(self.odoo_url + '/xmlrpc/object', allow_none=True)
+                print(uid, sock)
                 return True, [uid, sock]
         except Exception as e:
             return False, e
