@@ -29,7 +29,7 @@ class FlybarAutomation:
         self.app.route('/flybar/post/packaging_data', methods=['POST'])(self.post_resource)
 
     def run(self):
-        self.app.run(host='0.0.0.0', port=5001)
+        self.app.run(host='0.0.0.0', port=5000)
 
     def home(self):
         return 'Welcome to the FLYBAR SERVER!'

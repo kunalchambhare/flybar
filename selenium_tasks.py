@@ -167,7 +167,8 @@ class SeleniumProcesses:
                     data = zip_file.read()
                     picking_obj.write([int(picking_id)],
                                       {'goflow_document': base64.b64encode(data or b'').decode("ascii"),
-                                       'goflow_routing_status': 'doc_generated'})
+                                       'goflow_routing_status': 'doc_generated',
+                                       'rpa_status': False})
                 go_flow_packaging_update_log_id = go_flow_packaging_update_log.search(
                     [('order_ref', '=', int(task_id))], limit=1)
                 go_flow_packaging_update_log.write(go_flow_packaging_update_log_id[0], {'request_status': 'completed'})
@@ -185,7 +186,8 @@ class SeleniumProcesses:
         if success:
             picking_obj = odoo_obj.env['stock.picking']
             go_flow_packaging_update_log = odoo_obj.env['go.flow.packaging.update.log']
-            picking_obj.write([int(picking_id)], {'goflow_routing_status': 'require_manual_shipment'})
+            picking_obj.write([int(picking_id)],
+                              {'goflow_routing_status': 'require_manual_shipment', 'rpa_status': False})
             go_flow_packaging_update_log_id = go_flow_packaging_update_log.search([('order_ref', '=', int(task_id))],
                                                                                   limit=1)
             go_flow_packaging_update_log.write(go_flow_packaging_update_log_id[0], {'request_status': 'update_failed'})
