@@ -21,7 +21,7 @@ selenium_config = {
         'ODOO_PASSWORD': "admin",
         'ODOO_URL': "localhost",
         'ODOO_PORT': 8069,
-        'ODOO_DB': "odoo16_flybar_2",
+        'ODOO_DATABASE': "odoo16_flybar_2",
         'use_odoo_rpc': True
     },
 
@@ -30,7 +30,7 @@ selenium_config = {
         'ODOO_PASSWORD': "Since@2023",
         'ODOO_URL': "flybar-staging-11108069.dev.odoo.com",
         'ODOO_PORT': 80,
-        'ODOO_DB': "flybar-staging-11108069",
+        'ODOO_DATABASE': "flybar-staging-11108069",
         'use_odoo_rpc': True
     },
 
@@ -39,7 +39,7 @@ selenium_config = {
         'ODOO_PASSWORD': "Since@2023",
         'ODOO_URL': "https://apps.flybar.com",
         'ODOO_PORT': 80,
-        'ODOO_DB': "flybar_production",
+        'ODOO_DATABASE': "flybar_production",
         'use_odoo_rpc': False
     }
 
