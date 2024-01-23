@@ -6,6 +6,7 @@ from time import sleep
 from selenium.webdriver.common.by import By
 import os
 import odoorpc
+import xmlrpc.client as xc
 import base64
 import shutil
 from func_timeout import func_timeout, FunctionTimedOut
@@ -38,11 +39,14 @@ class SeleniumProcesses:
         self.goflow_password = selenium_config.get('GOFLOW_PASSWORD')
 
         # ODOORPC CREDENTIALS
-        self.odoo_username = selenium_config.get('ODOO_USERNAME')
-        self.odoo_password = selenium_config.get('ODOO_PASSWORD')
-        self.odoo_url = selenium_config.get('ODOO_URL')
-        self.odoo_port = selenium_config.get('ODOO_PORT')
-        self.odoo_db = selenium_config.get('ODOO_DATABASE')
+        odoo_connection_config = selenium_config.get('local_config')
+        if odoo_connection_config:
+            self.odoo_username = odoo_connection_config.get('ODOO_USERNAME')
+            self.odoo_password = odoo_connection_config.get('ODOO_PASSWORD')
+            self.odoo_url = odoo_connection_config.get('ODOO_URL')
+            self.odoo_port = odoo_connection_config.get('ODOO_PORT')
+            self.odoo_db = odoo_connection_config.get('ODOO_DATABASE')
+            self.use_odoo_rpc = odoo_connection_config.get('use_odoo_rpc')
 
     def login(self):
         self.driver.get(self.goflow_url)
@@ -161,17 +165,35 @@ class SeleniumProcesses:
         if found_file_path:
             success, odoo_obj = self.connect_odoo_rpc()
             if success:
-                picking_obj = odoo_obj.env['stock.picking']
-                go_flow_packaging_update_log = odoo_obj.env['go.flow.packaging.update.log']
-                with open(found_file_path, "rb") as zip_file:
-                    data = zip_file.read()
-                    picking_obj.write([int(picking_id)],
-                                      {'goflow_document': base64.b64encode(data or b'').decode("ascii"),
-                                       'goflow_routing_status': 'doc_generated',
-                                       'rpa_status': False})
-                go_flow_packaging_update_log_id = go_flow_packaging_update_log.search(
-                    [('order_ref', '=', int(task_id))], limit=1)
-                go_flow_packaging_update_log.write(go_flow_packaging_update_log_id[0], {'request_status': 'completed'})
+                if self.use_odoo_rpc:
+                    picking_obj = odoo_obj.env['stock.picking']
+                    go_flow_packaging_update_log = odoo_obj.env['go.flow.packaging.update.log']
+                    with open(found_file_path, "rb") as zip_file:
+                        data = zip_file.read()
+                        picking_obj.write([int(picking_id)],
+                                          {'goflow_document': base64.b64encode(data or b'').decode("ascii"),
+                                           'goflow_routing_status': 'doc_generated',
+                                           'rpa_status': False})
+                    go_flow_packaging_update_log_id = go_flow_packaging_update_log.search(
+                        [('order_ref', '=', int(task_id))], limit=1)
+                    go_flow_packaging_update_log.write(go_flow_packaging_update_log_id[0],
+                                                       {'request_status': 'completed'})
+                else:
+                    uid = odoo_obj[0]
+                    sock = odoo_obj[1]
+                    with open(found_file_path, "rb") as zip_file:
+                        data = zip_file.read()
+                        sock.execute(self.odoo_db, uid, self.odoo_password, 'stock.picking', 'write', int(picking_id),
+                                     {'goflow_document': base64.b64encode(data or b'').decode("ascii"),
+                                      'goflow_routing_status': 'doc_generated',
+                                      'rpa_status': False})
+                    go_flow_log_id = sock.execute(self.odoo_db, uid, self.odoo_password, 'go.flow.packaging.update.log',
+                                                  'search',
+                                                  [('order_ref', '=', int(task_id))])
+
+                    sock.execute(self.odoo_db, uid, self.odoo_password, 'go.flow.packaging.update.log', 'write',
+                                 go_flow_log_id[0],
+                                 {'request_status': 'completed'})
             else:
                 raise odoo_obj
 
@@ -184,20 +206,42 @@ class SeleniumProcesses:
         picking_id = vals.get('picking')
         task_id = vals.get('ID')
         if success:
-            picking_obj = odoo_obj.env['stock.picking']
-            go_flow_packaging_update_log = odoo_obj.env['go.flow.packaging.update.log']
-            picking_obj.write([int(picking_id)],
-                              {'goflow_routing_status': 'require_manual_shipment', 'rpa_status': False})
-            go_flow_packaging_update_log_id = go_flow_packaging_update_log.search([('order_ref', '=', int(task_id))],
-                                                                                  limit=1)
-            go_flow_packaging_update_log.write(go_flow_packaging_update_log_id[0], {'request_status': 'update_failed'})
+            picking_vals = {'goflow_routing_status': 'require_manual_shipment', 'rpa_status': False}
+            go_flow_log_vals = {'request_status': 'update_failed'}
+            if self.use_odoo_rpc:
+                picking_obj = odoo_obj.env['stock.picking']
+                go_flow_packaging_update_log = odoo_obj.env['go.flow.packaging.update.log']
+                picking_obj.write([int(picking_id)], picking_vals)
+                go_flow_packaging_update_log_id = go_flow_packaging_update_log.search(
+                    [('order_ref', '=', int(task_id))],
+                    limit=1)
+                go_flow_packaging_update_log.write(go_flow_packaging_update_log_id[0], go_flow_log_vals)
+            else:
+                uid = odoo_obj[0]
+                sock = odoo_obj[1]
+                sock.execute(self.odoo_db, uid, self.odoo_password, 'stock.picking', 'write', int(picking_id),
+                             picking_vals)
+
+                go_flow_log_id = sock.execute(self.odoo_db, uid, self.odoo_password, 'go.flow.packaging.update.log',
+                                              'search',
+                                              [('order_ref', '=', int(task_id))])
+
+                sock.execute(self.odoo_db, uid, self.odoo_password, 'go.flow.packaging.update.log', 'write',
+                             go_flow_log_id[0],
+                             go_flow_log_vals)
         else:
             raise odoo_obj
 
     def connect_odoo_rpc(self):
         try:
-            odoo = odoorpc.ODOO(self.odoo_url, port=self.odoo_port)
-            odoo.login(self.odoo_db, self.odoo_username, self.odoo_password)
-            return True, odoo
+            if self.use_odoo_rpc:
+                odoo = odoorpc.ODOO(self.odoo_url, port=self.odoo_port)
+                odoo.login(self.odoo_db, self.odoo_username, self.odoo_password)
+                return True, odoo
+            else:
+                sock_common = xc.ServerProxy(self.odoo_url + '/xmlrpc/common', allow_none=True)
+                uid = sock_common.login(self.odoo_db, self.odoo_username, self.odoo_password)
+                sock = xc.ServerProxy(self.odoo_url + '/xmlrpc/object', allow_none=True)
+                return True, [uid, sock]
         except Exception as e:
             return False, e

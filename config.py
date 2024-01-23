@@ -16,15 +16,31 @@ selenium_config = {
     'GOFLOW_USERNAME': "Robinb",
     'GOFLOW_PASSWORD': "Robin1600!",
 
-    'ODOO_USERNAME': "admin",
-    'ODOO_PASSWORD': "Since@2023",
-    'ODOO_URL': "flybar-staging-11108069.dev.odoo.com",
-    'ODOO_PORT': 80,
-    'ODOO_DB': "flybar-staging-11108069",
+    'local_config': {
+        'ODOO_USERNAME': "admin",
+        'ODOO_PASSWORD': "admin",
+        'ODOO_URL': "localhost",
+        'ODOO_PORT': 8069,
+        'ODOO_DB': "odoo16_flybar_2",
+        'use_odoo_rpc': True
+    },
 
-    # 'ODOO_USERNAME': "admin",
-    # 'ODOO_PASSWORD': "admin",
-    # 'ODOO_URL': "localhost",
-    # 'ODOO_PORT': 8069,
-    # 'ODOO_DB': "odoo16_flybar_2"
+    'staging_config': {
+        'ODOO_USERNAME': "admin",
+        'ODOO_PASSWORD': "Since@2023",
+        'ODOO_URL': "flybar-staging-11108069.dev.odoo.com",
+        'ODOO_PORT': 80,
+        'ODOO_DB': "flybar-staging-11108069",
+        'use_odoo_rpc': True
+    },
+
+    'production_config': {
+        'ODOO_USERNAME': "admin",
+        'ODOO_PASSWORD': "Since@2023",
+        'ODOO_URL': "https://apps.flybar.com",
+        'ODOO_PORT': 80,
+        'ODOO_DB': "flybar_production",
+        'use_odoo_rpc': False
+    }
+
 }
