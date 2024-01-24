@@ -39,7 +39,7 @@ class SeleniumProcesses:
         self.goflow_password = selenium_config.get('GOFLOW_PASSWORD')
 
         # ODOORPC CREDENTIALS
-        odoo_connection_config = selenium_config.get('local_config')
+        odoo_connection_config = selenium_config.get('production_config')
         if odoo_connection_config:
             self.odoo_username = odoo_connection_config.get('ODOO_USERNAME')
             self.odoo_password = odoo_connection_config.get('ODOO_PASSWORD')
