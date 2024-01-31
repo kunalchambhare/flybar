@@ -7,6 +7,7 @@ from datetime import datetime
 import os
 from config import JWT_SECRET_KEY, DATABASE
 import logging
+import json
 
 _logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ class FlybarAutomation:
             response = self.check_access(received_token)
             if response['status'] == 200:
                 self.db_manager.init_db()
-                data = request.json
+                data = json.loads(request.json)
                 order_name = data.get('order_name')
                 weight = data.get('weight')
                 length = data.get('length')
