@@ -114,19 +114,27 @@ class SeleniumProcesses:
             self.do_pack_in_separate_box(actions)
 
         if self.process_type == 'individual_separate_multi_box':
-            self._process_individual_items_in_multi_box(lines)
+            self._process_individual_items_in_multi_box(lines, True)
 
         if self.process_type == 'individual_item_same_box':
-            self._process_individual_items_in_same_box(lines)
+            self._process_individual_items_in_same_box(lines, True)
 
         if self.process_type == 'split_multi_box':
             self._process_split_multi_box(lines, actions)
 
         if self.process_type == 'mixed':
-            if lines.get('individual_separate_multi_box'):
-                self._process_individual_items_in_multi_box(lines)
-            if lines.get('individual_item_same_box'):
-                self._process_individual_items_in_same_box(lines)
+            if lines.get('split_multi_box'):
+                if lines.get('individual_separate_multi_box'):
+                    self._process_individual_items_in_multi_box(lines, False)
+                if lines.get('individual_item_same_box'):
+                    self._process_individual_items_in_same_box(lines, False)
+            else:
+                if lines.get('individual_separate_multi_box') and lines.get('individual_item_same_box'):
+                    self._process_individual_items_in_multi_box(lines, False)
+                    self._process_individual_items_in_same_box(lines, True)
+                elif lines.get('individual_separate_multi_box'):
+                    self._process_individual_items_in_multi_box(lines, True)
+                    self._process_individual_items_in_same_box(lines, True)
             if lines.get('split_multi_box'):
                 self._process_split_multi_box(lines, actions)
 
@@ -207,7 +215,7 @@ class SeleniumProcesses:
             ship_button.click()
         sleep(4)
 
-    def _process_individual_items_in_multi_box(self, lines):
+    def _process_individual_items_in_multi_box(self, lines, will_pack_all):
         packages = lines.get('individual_separate_multi_box')
         order_total_quantity = 0
         for package in packages:
@@ -227,20 +235,23 @@ class SeleniumProcesses:
                 done_qty += int(product.get('quantity'))
             sleep(1)
             print(order_total_quantity, done_qty)
-
-            close_box_button = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Close Box']")
-            save_label = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Save Label']")
-            pack_shipment_and_close = self.driver.find_elements(By.XPATH,
-                                                                "//button[normalize-space()='Prepare Shipment & Close']")
-            if len(close_box_button) > 0:
-                close_box_button[0].click()
-                save_label[0].click()
+            if will_pack_all:
+                if order_total_quantity > done_qty:
+                    self.driver.find_element(By.XPATH, "//button[normalize-space()='Close Box']").click()
+                    sleep(1)
+                    self.driver.find_element(By.XPATH, "//button[normalize-space()='Save Label']").click()
+                    sleep(1)
+                elif order_total_quantity == done_qty:
+                    self.driver.find_element(By.XPATH,
+                                             "//button[normalize-space()='Prepare Shipment & Close']").click()
+                    sleep(1)
+            else:
+                self.driver.find_element(By.XPATH, "//button[normalize-space()='Close Box']").click()
                 sleep(1)
-            elif len(pack_shipment_and_close) > 0:
-                pack_shipment_and_close[0].click()
+                self.driver.find_element(By.XPATH, "//button[normalize-space()='Save Label']").click()
                 sleep(1)
 
-    def _process_individual_items_in_same_box(self, lines):
+    def _process_individual_items_in_same_box(self, lines, will_pack_all):
         packages = lines.get('individual_item_same_box')
         order_total_quantity = 0
         for package in packages:
@@ -261,16 +272,20 @@ class SeleniumProcesses:
             sleep(1)
             print(order_total_quantity, done_qty)
 
-            close_box_button = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Close Box']")
-            save_label = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Save Label']")
-            pack_shipment_and_close = self.driver.find_elements(By.XPATH,
-                                                                "//button[normalize-space()='Prepare Shipment & Close']")
-            if len(close_box_button) > 0:
-                close_box_button[0].click()
-                save_label[0].click()
+            if will_pack_all:
+                if order_total_quantity > done_qty:
+                    self.driver.find_element(By.XPATH, "//button[normalize-space()='Close Box']").click()
+                    sleep(1)
+                    self.driver.find_element(By.XPATH, "//button[normalize-space()='Save Label']").click()
+                    sleep(1)
+                elif order_total_quantity == done_qty:
+                    self.driver.find_element(By.XPATH,
+                                             "//button[normalize-space()='Prepare Shipment & Close']").click()
+                    sleep(1)
+            else:
+                self.driver.find_element(By.XPATH, "//button[normalize-space()='Close Box']").click()
                 sleep(1)
-            elif len(pack_shipment_and_close) > 0:
-                pack_shipment_and_close[0].click()
+                self.driver.find_element(By.XPATH, "//button[normalize-space()='Save Label']").click()
                 sleep(1)
 
     def _process_split_multi_box(self, lines, actions):

@@ -30,7 +30,7 @@ selenium_config = {
         'ODOO_PASSWORD': "Since@2023",
         'ODOO_URL': "robin-bahadur-flybar-staging-11547131.dev.odoo.com",
         'ODOO_PORT': 80,
-        'ODOO_DATABASE': "flybar-staging-11547131",
+        'ODOO_DATABASE': "robin-bahadur-flybar-staging-11547131",
         'use_odoo_rpc': True
     },
 
