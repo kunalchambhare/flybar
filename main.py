@@ -56,13 +56,16 @@ class FlybarAutomation:
                 width = data.get('width')
                 height = data.get('height')
                 picking = data.get('picking')
+                main_operation_type = data.get('main_operation_type')
+                line_json_data = data.get('line_json_data')
 
                 db = self.db_manager.get_db()
                 cursor = db.cursor()
 
                 cursor.execute(
-                    'INSERT INTO packaging_order (order_name, weight, length, width, height, status, create_date, picking) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                    (order_name, weight, length, width, height, 'pending', datetime.now(), picking))
+                    'INSERT INTO packaging_order (order_name, weight, length, width, height, status, create_date, picking, main_operation_type, line_json_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    (order_name, weight, length, width, height, 'pending', datetime.now(), picking, main_operation_type,
+                     line_json_data))
                 new_row_id = cursor.lastrowid
                 db.commit()
 

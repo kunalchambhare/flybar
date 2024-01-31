@@ -28,9 +28,9 @@ selenium_config = {
     'staging_config': {
         'ODOO_USERNAME': "admin",
         'ODOO_PASSWORD': "Since@2023",
-        'ODOO_URL': "flybar-staging-11108069.dev.odoo.com",
+        'ODOO_URL': "robin-bahadur-flybar-staging-11547131.dev.odoo.com",
         'ODOO_PORT': 80,
-        'ODOO_DATABASE': "flybar-staging-11108069",
+        'ODOO_DATABASE': "flybar-staging-11547131",
         'use_odoo_rpc': True
     },
 

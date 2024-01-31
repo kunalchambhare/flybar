@@ -30,7 +30,9 @@ class DatabaseManager:
                                     create_date TEXT,
                                     picking TEXT,
                                     error TEXT,
-                                    msg TEXT
+                                    msg TEXT,
+                                    main_operation_type TEXT,
+                                    line_json_data TEXT
                                 )
                             ''')
 

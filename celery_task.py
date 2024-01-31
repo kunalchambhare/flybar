@@ -28,7 +28,7 @@ def process_pending_tasks():
             columns = [col[0] for col in cursor.description]
             user_dict = dict(zip(columns, user_row))
             selenium = SeleniumProcesses()
-            success, exceptt, msg = selenium.process_1(user_dict)
+            success, exceptt, msg = selenium.process_order(user_dict)
             if success:
                 cursor.execute('UPDATE packaging_order SET status = ? WHERE ID = ?', ('completed', task_id))
                 db.commit()
