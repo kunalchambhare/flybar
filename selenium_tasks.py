@@ -107,25 +107,25 @@ class SeleniumProcesses:
 
         self.process_type = vals.get('main_operation_type')
         lines = json.loads(vals.get('line_json_data'))
-        if self.process_type == 'pack_all':
+        if self.process_type == 'all':
             self.do_pack_all(weight, length, width, height)
 
         if self.process_type == 'is_separate_box':
             self.do_pack_in_separate_box(actions)
 
-        if self.process_type == 'individual_items_in_multi_box_type':
+        if self.process_type == 'individual_separate_multi_box':
             self._process_individual_items_in_multi_box(lines)
 
-        if self.process_type == 'individual_items_in_same_box_type':
+        if self.process_type == 'individual_item_same_box':
             self._process_individual_items_in_same_box(lines)
 
         if self.process_type == 'split_multi_box':
             self._process_split_multi_box(lines, actions)
 
         if self.process_type == 'mixed':
-            if lines.get('individual_items_in_multi_box_type'):
+            if lines.get('individual_separate_multi_box'):
                 self._process_individual_items_in_multi_box(lines)
-            if lines.get('individual_items_in_same_box_type'):
+            if lines.get('individual_item_same_box'):
                 self._process_individual_items_in_same_box(lines)
             if lines.get('split_multi_box'):
                 self._process_split_multi_box(lines, actions)
@@ -208,7 +208,7 @@ class SeleniumProcesses:
         sleep(4)
 
     def _process_individual_items_in_multi_box(self, lines):
-        packages = lines.get('individual_items_in_multi_box_type')
+        packages = lines.get('individual_separate_multi_box')
         order_total_quantity = 0
         for package in packages:
             for product in package.get('product_lines'):
@@ -240,7 +240,7 @@ class SeleniumProcesses:
                 sleep(1)
 
     def _process_individual_items_in_same_box(self, lines):
-        packages = lines.get('individual_items_in_same_box_type')
+        packages = lines.get('individual_item_same_box')
         order_total_quantity = 0
         for package in packages:
             for product in package.get('product_lines'):
