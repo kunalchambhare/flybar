@@ -58,7 +58,7 @@ class FlybarAutomation:
                 height = data.get('height')
                 picking = data.get('picking')
                 main_operation_type = data.get('main_operation_type')
-                line_json_data = data.get('line_json_data')
+                line_json_data = json.dumps(data.get('line_json_data'))
 
                 db = self.db_manager.get_db()
                 cursor = db.cursor()
