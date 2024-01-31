@@ -41,7 +41,7 @@ class SeleniumProcesses:
         self.goflow_password = selenium_config.get('GOFLOW_PASSWORD')
 
         # ODOORPC CREDENTIALS
-        odoo_connection_config = selenium_config.get('local_config')
+        odoo_connection_config = selenium_config.get('staging_config')
         if odoo_connection_config:
             self.odoo_username = odoo_connection_config.get('ODOO_USERNAME')
             self.odoo_password = odoo_connection_config.get('ODOO_PASSWORD')
@@ -176,7 +176,7 @@ class SeleniumProcesses:
         sleep(4)
         ship_close_button = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Ship & Close']")
         if not len(ship_close_button):
-            raise ValueError("Ship and Close Button not found")
+            raise Exception("Ship and Close Button not found")
         ship_close_button[0].click()
         sleep(3)
         self.driver.find_element(By.XPATH, "//i[@class='icon-ex dialog-close']").click()
@@ -392,7 +392,7 @@ class SeleniumProcesses:
                                  go_flow_log_id[0],
                                  {'request_status': 'completed'})
             else:
-                raise odoo_obj
+                raise Exception(odoo_obj)
 
             if not os.path.exists(self.move_path):
                 os.mkdir(self.move_path)
@@ -427,7 +427,7 @@ class SeleniumProcesses:
                              go_flow_log_id[0],
                              go_flow_log_vals)
         else:
-            raise odoo_obj
+            raise Exception(odoo_obj)
 
     def connect_odoo_rpc(self):
         try:
