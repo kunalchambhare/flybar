@@ -228,11 +228,12 @@ class SeleniumProcesses:
             sleep(1)
             print(order_total_quantity, done_qty)
 
-            self.driver.find_element(By.XPATH, "//button[normalize-space()='Close Box']").click()
+            close_box_button = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Close Box']")
             save_label = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Save Label']")
             pack_shipment_and_close = self.driver.find_elements(By.XPATH,
                                                                 "//button[normalize-space()='Prepare Shipment & Close']")
-            if len(save_label) > 0:
+            if len(close_box_button) > 0:
+                close_box_button[0].click()
                 save_label[0].click()
                 sleep(1)
             elif len(pack_shipment_and_close) > 0:
@@ -260,11 +261,12 @@ class SeleniumProcesses:
             sleep(1)
             print(order_total_quantity, done_qty)
 
-            self.driver.find_element(By.XPATH, "//button[normalize-space()='Close Box']").click()
+            close_box_button = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Close Box']")
             save_label = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Save Label']")
             pack_shipment_and_close = self.driver.find_elements(By.XPATH,
                                                                 "//button[normalize-space()='Prepare Shipment & Close']")
-            if len(save_label) > 0:
+            if len(close_box_button) > 0:
+                close_box_button[0].click()
                 save_label[0].click()
                 sleep(1)
             elif len(pack_shipment_and_close) > 0:
