@@ -12,9 +12,13 @@ selenium_config = {
     # 'DOWNLOAD_DIRECTORY': "/home/kunal.chambhare/Downloads/",
     # 'MOVE_PATH': '/home/kunal.chambhare/UploadedDocs',
 
-    'GOFLOW_URL': "https://fb.goflow.com/",
-    'GOFLOW_USERNAME': "Robinb",
-    'GOFLOW_PASSWORD': "Robin1600!",
+    # 'GOFLOW_URL': "https://fb.goflow.com/",
+    # 'GOFLOW_USERNAME': "Robinb",
+    # 'GOFLOW_PASSWORD': "Robin1600!",
+
+    'GOFLOW_URL': "https://bistasolutions.goflow.com/",
+    'GOFLOW_USERNAME': "robin.bahadur@bistasolutions.com",
+    'GOFLOW_PASSWORD': "Flyb@r2023",
 
     'local_config': {
         'ODOO_USERNAME': "admin",
