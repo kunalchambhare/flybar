@@ -133,7 +133,7 @@ class SeleniumProcesses:
                     self._process_individual_items_in_multi_box(lines, False)
                     self._process_individual_items_in_same_box(lines, True)
                 elif lines.get('individual_separate_multi_box'):
-                    self._process_individual_items_in_multi_box(lines, True)
+                    self._process_individual_items_in_multi_box(lines, False)
                     self._process_individual_items_in_same_box(lines, True)
             if lines.get('split_multi_box'):
                 self._process_split_multi_box(lines, actions)
@@ -182,15 +182,25 @@ class SeleniumProcesses:
             self.driver.find_element(By.XPATH, "//input[@placeholder='Height']").clear()
             self.driver.find_element(By.XPATH, "//input[@placeholder='Height']").send_keys(str(height))
         sleep(4)
+        # ship_close_button = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Ship & Close']")
+        # if not len(ship_close_button):
+        #     raise Exception("Ship and Close Button not found")
+        # ship_close_button[0].click()
+        # sleep(3)
+        # self.driver.find_element(By.XPATH, "//i[@class='icon-ex dialog-close']").click()
+        # sleep(2)
+        # self.driver.find_element(By.XPATH, "//i[@class='icon-ex dialog-close']").click()
+        # sleep(2)
         ship_close_button = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Ship & Close']")
         if not len(ship_close_button):
-            raise Exception("Ship and Close Button not found")
-        ship_close_button[0].click()
+            prepare_and_ship = self.driver.find_elements(By.XPATH,
+                                                        "//button[normalize-space()='Prepare Shipment & Close']")
+            if not len(prepare_and_ship):
+                raise Exception("Ship and Close Button and Prepare Shipment & Close not found")
+            prepare_and_ship[0].click()
+        else:
+            ship_close_button[0].click()
         sleep(3)
-        self.driver.find_element(By.XPATH, "//i[@class='icon-ex dialog-close']").click()
-        sleep(2)
-        self.driver.find_element(By.XPATH, "//i[@class='icon-ex dialog-close']").click()
-        sleep(2)
 
     def do_pack_in_separate_box(self, actions):
         print("TEST")
