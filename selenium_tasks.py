@@ -114,10 +114,12 @@ class SeleniumProcesses:
             self.do_pack_in_separate_box(actions)
 
         if self.process_type == 'individual_separate_multi_box':
-            self._process_individual_items_in_multi_box(lines, True)
+            packages = lines.get('individual_separate_multi_box')
+            self._process_individual_items_in_multi_and_same_box(packages, True)
 
         if self.process_type == 'individual_item_same_box':
-            self._process_individual_items_in_same_box(lines, True)
+            packages = lines.get('individual_item_same_box')
+            self._process_individual_items_in_multi_and_same_box(packages, True)
 
         if self.process_type == 'split_multi_box':
             self._process_split_multi_box(lines, actions)
@@ -125,18 +127,25 @@ class SeleniumProcesses:
         if self.process_type == 'mixed':
             if lines.get('split_multi_box'):
                 if lines.get('individual_separate_multi_box'):
-                    self._process_individual_items_in_multi_box(lines, False)
+                    packages = lines.get('individual_separate_multi_box')
+                    self._process_individual_items_in_multi_and_same_box(packages, False)
                 if lines.get('individual_item_same_box'):
-                    self._process_individual_items_in_same_box(lines, False)
+                    packages = lines.get('individual_item_same_box')
+                    self._process_individual_items_in_multi_and_same_box(packages, False)
+                if lines.get('split_multi_box'):
+                    self._process_split_multi_box(lines, actions)
             else:
                 if lines.get('individual_separate_multi_box') and lines.get('individual_item_same_box'):
-                    self._process_individual_items_in_multi_box(lines, False)
-                    self._process_individual_items_in_same_box(lines, True)
+                    packages = lines.get('individual_separate_multi_box')
+                    combined_packages = list(packages)
+                    combined_packages.extend(lines.get('individual_item_same_box'))
+                    self._process_individual_items_in_multi_and_same_box(combined_packages, True)
                 elif lines.get('individual_separate_multi_box'):
-                    self._process_individual_items_in_multi_box(lines, False)
-                    self._process_individual_items_in_same_box(lines, True)
-            if lines.get('split_multi_box'):
-                self._process_split_multi_box(lines, actions)
+                    packages = lines.get('individual_separate_multi_box')
+                    self._process_individual_items_in_multi_and_same_box(packages, True)
+                elif lines.get('individual_item_same_box'):
+                    packages = lines.get('individual_item_same_box')
+                    self._process_individual_items_in_multi_and_same_box(packages, True)
 
         sleep(3)
 
@@ -182,19 +191,10 @@ class SeleniumProcesses:
             self.driver.find_element(By.XPATH, "//input[@placeholder='Height']").clear()
             self.driver.find_element(By.XPATH, "//input[@placeholder='Height']").send_keys(str(height))
         sleep(4)
-        # ship_close_button = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Ship & Close']")
-        # if not len(ship_close_button):
-        #     raise Exception("Ship and Close Button not found")
-        # ship_close_button[0].click()
-        # sleep(3)
-        # self.driver.find_element(By.XPATH, "//i[@class='icon-ex dialog-close']").click()
-        # sleep(2)
-        # self.driver.find_element(By.XPATH, "//i[@class='icon-ex dialog-close']").click()
-        # sleep(2)
         ship_close_button = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Ship & Close']")
         if not len(ship_close_button):
             prepare_and_ship = self.driver.find_elements(By.XPATH,
-                                                        "//button[normalize-space()='Prepare Shipment & Close']")
+                                                         "//button[normalize-space()='Prepare Shipment & Close']")
             if not len(prepare_and_ship):
                 raise Exception("Ship and Close Button and Prepare Shipment & Close not found")
             prepare_and_ship[0].click()
@@ -229,8 +229,7 @@ class SeleniumProcesses:
             ship_button.click()
         sleep(4)
 
-    def _process_individual_items_in_multi_box(self, lines, will_pack_all):
-        packages = lines.get('individual_separate_multi_box')
+    def _process_individual_items_in_multi_and_same_box(self, packages, will_pack_all):
         order_total_quantity = 0
         for package in packages:
             for product in package.get('product_lines'):
@@ -240,52 +239,17 @@ class SeleniumProcesses:
         for package in packages:
             product_lines = package.get('product_lines')
             for product in product_lines:
-                product_td = self.driver.find_element(By.XPATH,
-                                                      "//td[@class='grid-cell-text link-action break-words'][normalize-space()='" + product.get(
-                                                          'product_name') + "']")
-                parent_tr = product_td.find_element(By.XPATH, "..")
-                for i in range(int(product.get('quantity'))):
-                    parent_tr.find_element(By.XPATH, ".//i[contains(@class, 'icon-plus-circled-filled')]").click()
+                item_number_input = self.driver.find_element(By.XPATH, "//input[@placeholder='Item Number']")
+                item_number_input.clear()
+                item_number_input.send_keys(product.get('product_name'))
+                quantity_input = self.driver.find_element(By.XPATH, "//input[@placeholder='Quantity']")
+                quantity_input.clear()
+                quantity_input.send_keys(int(product.get('quantity')))
+                quantity_input.send_keys(Keys.ENTER)
+                sleep(1)
                 done_qty += int(product.get('quantity'))
             sleep(1)
             print(order_total_quantity, done_qty)
-            if will_pack_all:
-                if order_total_quantity > done_qty:
-                    self.driver.find_element(By.XPATH, "//button[normalize-space()='Close Box']").click()
-                    sleep(1)
-                    self.driver.find_element(By.XPATH, "//button[normalize-space()='Save Label']").click()
-                    sleep(1)
-                elif order_total_quantity == done_qty:
-                    self.driver.find_element(By.XPATH,
-                                             "//button[normalize-space()='Prepare Shipment & Close']").click()
-                    sleep(1)
-            else:
-                self.driver.find_element(By.XPATH, "//button[normalize-space()='Close Box']").click()
-                sleep(1)
-                self.driver.find_element(By.XPATH, "//button[normalize-space()='Save Label']").click()
-                sleep(1)
-
-    def _process_individual_items_in_same_box(self, lines, will_pack_all):
-        packages = lines.get('individual_item_same_box')
-        order_total_quantity = 0
-        for package in packages:
-            for product in package.get('product_lines'):
-                order_total_quantity += int(product.get('quantity'))
-
-        done_qty = 0
-        for package in packages:
-            product_lines = package.get('product_lines')
-            for product in product_lines:
-                product_td = self.driver.find_element(By.XPATH,
-                                                      "//td[@class='grid-cell-text link-action break-words'][normalize-space()='" + product.get(
-                                                          'product_name') + "']")
-                parent_tr = product_td.find_element(By.XPATH, "..")
-                for i in range(int(product.get('quantity'))):
-                    parent_tr.find_element(By.XPATH, ".//i[contains(@class, 'icon-plus-circled-filled')]").click()
-                done_qty += int(product.get('quantity'))
-            sleep(1)
-            print(order_total_quantity, done_qty)
-
             if will_pack_all:
                 if order_total_quantity > done_qty:
                     self.driver.find_element(By.XPATH, "//button[normalize-space()='Close Box']").click()
