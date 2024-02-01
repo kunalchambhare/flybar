@@ -200,7 +200,11 @@ class SeleniumProcesses:
             prepare_and_ship[0].click()
         else:
             ship_close_button[0].click()
-        sleep(3)
+            sleep(2)
+            self.driver.find_element(By.XPATH, "//i[@class='icon-ex dialog-close']").click()
+            sleep(1)
+            self.driver.find_element(By.XPATH, "//i[@class='icon-ex dialog-close']").click()
+            sleep(2)
 
     def do_pack_in_separate_box(self, actions):
         print("TEST")
