@@ -305,7 +305,7 @@ class SeleniumProcesses:
 
         done_qty = 0
         for package in packages:
-            self.log.append(f"<p>Started package: {package}</p>")
+            self.log.append(f"<p>Started package: {package.get('package_name')}</p>")
             product_lines = package.get('product_lines')
             for product in product_lines:
                 try:
@@ -325,12 +325,12 @@ class SeleniumProcesses:
                     raise Exception(e)
 
             sleep(1)
-            self.log.append(f"<p>Created package: {package}</p>")
+            self.log.append(f"<p>Created package: {package.get('package_name')}</p>")
             try:
                 self.pack_box(will_pack_all, order_total_quantity, done_qty)
-                self.log.append(f"<p>Closed package: {package}</p>")
+                self.log.append(f"<p>Closed package: {package.get('package_name')}</p>")
             except Exception as e:
-                self.log.append(f"<p>Error is closing the package: {package}</p>")
+                self.log.append(f"<p>Error in closing the package: {package.get('package_name')}</p>")
                 raise Exception(e)
 
     def _process_split_multi_box(self, products, will_pack_all):
