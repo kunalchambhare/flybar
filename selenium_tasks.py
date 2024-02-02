@@ -74,8 +74,8 @@ class SeleniumProcesses:
             if self.driver is not None:
                 self.driver.quit()
             try:
-                self._update_failed_status(vals)
                 self.log.append("<p>Session timed out after 180 seconds</p>")
+                self._update_failed_status(vals)
                 return False, "Session timed out after 180 seconds", "Process Failed Status Updated to Odoo"
             except Exception as e_2:
                 self.log.append(
@@ -85,14 +85,14 @@ class SeleniumProcesses:
             if self.driver is not None:
                 self.driver.quit()
             try:
-                self._update_failed_status(vals)
                 self.log.append(f"<p>Error {str(e)}. Process Failed Status Update Failed</p>")
+                self._update_failed_status(vals)
                 return False, e, "Process Failed Status Updated to Odoo"
             except Exception as e_2:
                 self.log.append(f"<p>Error {str(e)}. Process Failed Status Update Failed: {str(e_2)}</p>")
                 return False, f"{str(e)} {str(e_2)}", "Process Failed Status Update Failed"
 
-        print("Selenium Process Successful")
+        self.log.append(f"<p>Selenium Process Complete</p>")
 
         try:
             self.upload_document(vals)
@@ -305,12 +305,12 @@ class SeleniumProcesses:
 
         done_qty = 0
         for package in packages:
-            self.log.append(f"<p>Started package: {package.get('package_name')}</p>")
+            self.log.append(f"Started package: {package.get('package_name')}<br>")
             product_lines = package.get('product_lines')
             for product in product_lines:
                 try:
                     self.log.append(
-                        f"<p>Adding Product: {product.get('product_name')} with quantity: {product.get('quantity')}</p>")
+                        f"Adding Product: {product.get('product_name')} with quantity: {product.get('quantity')}<br>")
                     item_number_input = self.driver.find_element(By.XPATH, "//input[@placeholder='Item Number']")
                     item_number_input.clear()
                     item_number_input.send_keys(product.get('product_name'))
@@ -325,10 +325,10 @@ class SeleniumProcesses:
                     raise Exception(e)
 
             sleep(1)
-            self.log.append(f"<p>Created package: {package.get('package_name')}</p>")
+            self.log.append(f"Created package: {package.get('package_name')}<br>")
             try:
                 self.pack_box(will_pack_all, order_total_quantity, done_qty)
-                self.log.append(f"<p>Closed package: {package.get('package_name')}</p>")
+                self.log.append(f"Closed package: {package.get('package_name')}<br><br>")
             except Exception as e:
                 self.log.append(f"<p>Error in closing the package: {package.get('package_name')}</p>")
                 raise Exception(e)
@@ -342,7 +342,7 @@ class SeleniumProcesses:
         for product in products:
             product_name = product.get('product_name')
             self.log.append(
-                f"<p>Adding Product: {product_name} with quantity: {product.get('quantity')}</p>")
+                f"Adding Product: {product_name} with quantity: {product.get('quantity')}<br>")
             try:
                 product_qty = product.get('quantity')
                 item_number_input = self.driver.find_element(By.XPATH, "//input[@placeholder='Item Number']")
@@ -404,10 +404,10 @@ class SeleniumProcesses:
             #     if not float(height_val):
             #         self.driver.find_element(By.XPATH, "//input[@placeholder='Height']").clear()
             #         self.driver.find_element(By.XPATH, "//input[@placeholder='Height']").send_keys(int(value.get('height')))
-            self.log.append(f"<p>Created package for product: {product_name}</p>")
+            self.log.append(f"Created package for product: {product_name}<br>")
             try:
                 self.pack_box(will_pack_all, order_total_quantity, done_qty)
-                self.log.append(f"<p>Closed package for product: {product_name}</p>")
+                self.log.append(f"Closed package for product: {product_name}<br><br>")
             except Exception as e:
                 self.log.append(f"<p>Error is closing the package: {product_name}</p>")
                 raise Exception(e)
@@ -415,6 +415,7 @@ class SeleniumProcesses:
     def pack_box(self, will_pack_all, order_total_quantity, done_qty):
         if will_pack_all:
             if order_total_quantity > done_qty:
+                sleep(1)
                 self.driver.find_element(By.XPATH, "//button[normalize-space()='Close Box']").click()
                 sleep(1)
                 self.driver.find_element(By.XPATH, "//button[normalize-space()='Save Label']").click()
