@@ -109,6 +109,7 @@ class SeleniumProcesses:
         length = vals.get("length")
         width = vals.get("width")
         height = vals.get("height")
+        self.process_type = vals.get('main_operation_type')
 
         self.find_order(order_name)
 
