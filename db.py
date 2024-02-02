@@ -32,7 +32,8 @@ class DatabaseManager:
                                     error TEXT,
                                     msg TEXT,
                                     main_operation_type TEXT,
-                                    line_json_data TEXT
+                                    line_json_data TEXT,
+                                    log TEXT
                                 )
                             ''')
 

@@ -2,6 +2,7 @@
 from celery import Celery
 import sqlite3
 from selenium_tasks import SeleniumProcesses
+from datetime import datetime
 
 celery = Celery(
     'celery_tasks',
@@ -19,23 +20,29 @@ def process_pending_tasks():
     pending_task = cursor.fetchone()
 
     if pending_task:
+        log = []
+        start_time = datetime.now()
         task_id = pending_task[0]
         cursor.execute('UPDATE packaging_order SET status = ? WHERE ID = ?', ('processing', task_id))
         db.commit()
+        log.append(f'<p>Process started at {str(start_time)}.<p>')
         try:
             cursor = db.execute('SELECT * FROM packaging_order WHERE ID = ?', (task_id,))
             user_row = cursor.fetchone()
             columns = [col[0] for col in cursor.description]
             user_dict = dict(zip(columns, user_row))
             selenium = SeleniumProcesses()
+            selenium.log = list(log)
             success, exceptt, msg = selenium.process_order(user_dict)
+            selenium.log.append(f"<p>Process completed at {str(datetime.now())}</p>")
             if success:
-                cursor.execute('UPDATE packaging_order SET status = ? WHERE ID = ?', ('completed', task_id))
+                cursor.execute('UPDATE packaging_order SET status = ?, log = ? WHERE ID = ?',
+                               ('completed', " ".join(selenium.log), task_id))
                 db.commit()
                 print(exceptt, msg)
             else:
-                cursor.execute('UPDATE packaging_order SET error = ?, msg = ? WHERE ID = ?',
-                               (str(exceptt), str(msg), task_id))
+                cursor.execute('UPDATE packaging_order SET error = ?, msg = ?, log = ? WHERE ID = ?',
+                               (str(exceptt), str(msg), " ".join(selenium.log), task_id))
                 db.commit()
                 print(exceptt, msg)
                 raise exceptt
