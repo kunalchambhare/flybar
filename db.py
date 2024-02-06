@@ -33,7 +33,9 @@ class DatabaseManager:
                                     msg TEXT,
                                     main_operation_type TEXT,
                                     line_json_data TEXT,
-                                    log TEXT
+                                    log TEXT,
+                                    status_updated_to_odoo BOOLEAN,
+                                    odoo_response_message TEXT
                                 )
                             ''')
 

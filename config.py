@@ -24,6 +24,8 @@ selenium_config = {
         'ODOO_USERNAME': "admin",
         'ODOO_PASSWORD': "admin",
         'ODOO_URL': "localhost",
+        'ODOO_WEBHOOK_URL': "http://localhost:8069/update_packaging_status_update",
+        'AUTH_KEY': "8c2fe0217cc8ae00e373e46ea730dae52575f244",
         'ODOO_PORT': 8069,
         'ODOO_DATABASE': "odoo16_flybar_2",
         'use_odoo_rpc': True
@@ -33,6 +35,8 @@ selenium_config = {
         'ODOO_USERNAME': "admin",
         'ODOO_PASSWORD': "Since@2023",
         'ODOO_URL': "robin-bahadur-flybar-staging-11547131.dev.odoo.com",
+        'ODOO_WEBHOOK_URL': "http://robin-bahadur-flybar-staging-11547131.dev.odoo.com/update_packaging_status_update",
+        'AUTH_KEY': "8c2fe0217cc8ae00e373e46ea730dae52575f244",
         'ODOO_PORT': 80,
         'ODOO_DATABASE': "robin-bahadur-flybar-staging-11547131",
         'use_odoo_rpc': True
@@ -42,6 +46,8 @@ selenium_config = {
         'ODOO_USERNAME': "admin",
         'ODOO_PASSWORD': "Since@2023",
         'ODOO_URL': "https://apps.flybar.com",
+        'ODOO_WEBHOOK_URL': "https://apps.flybar.com/update_packaging_status_update",
+        'AUTH_KEY': "8c2fe0217cc8ae00e373e46ea730dae52575f244",
         'ODOO_PORT': 80,
         'ODOO_DATABASE': "flybar_production",
         'use_odoo_rpc': False

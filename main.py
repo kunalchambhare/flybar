@@ -37,9 +37,9 @@ class FlybarAutomation:
 
     def test_route(self):
         received_token = request.headers.get('Authorization')
-        status = self.check_access(received_token)
+        access_status = self.check_access(received_token)
         self.app.logger.info("FLASK TEST")
-        if status.status == '200 OK':
+        if access_status.get('status') == 200:
             return jsonify({'message': 'Authorized'}), 200
         else:
             return jsonify({'message': 'Unauthorized'}), 200
