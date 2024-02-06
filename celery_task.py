@@ -104,7 +104,7 @@ def update_status_to_odoo(vals):
         url = odoo_connection_config.get('ODOO_WEBHOOK_URL')
         payload = json.dumps(vals)
         headers = {
-            'Authorization': odoo_connection_config.get('AUTH_KEY'),
+            'API-KEY': odoo_connection_config.get('AUTH_KEY'),
             'Content-Type': 'application/json'
         }
         response = requests.request("POST", url, headers=headers, data=payload)
