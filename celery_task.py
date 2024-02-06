@@ -22,7 +22,7 @@ from config import DATABASE, selenium_config
 
 def connect_odoo_rpc():
     # ODOORPC CREDENTIALS
-    odoo_connection_config = selenium_config.get('local_config')
+    odoo_connection_config = selenium_config.get('staging_config')
     if odoo_connection_config:
         odoo_username = odoo_connection_config.get('ODOO_USERNAME')
         odoo_password = odoo_connection_config.get('ODOO_PASSWORD')

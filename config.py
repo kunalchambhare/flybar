@@ -35,7 +35,7 @@ selenium_config = {
         'ODOO_USERNAME': "admin",
         'ODOO_PASSWORD': "Since@2023",
         'ODOO_URL': "robin-bahadur-flybar-staging-11547131.dev.odoo.com",
-        'ODOO_WEBHOOK_URL': "http://robin-bahadur-flybar-staging-11547131.dev.odoo.com/update_packaging_status_update",
+        'ODOO_WEBHOOK_URL': "https://robin-bahadur-flybar-staging-11547131.dev.odoo.com/update_packaging_status_update",
         'AUTH_KEY': "8c2fe0217cc8ae00e373e46ea730dae52575f244",
         'ODOO_PORT': 80,
         'ODOO_DATABASE': "robin-bahadur-flybar-staging-11547131",
