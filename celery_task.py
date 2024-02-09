@@ -124,13 +124,13 @@ def main_process(task_id, db, cron_db_id):
         user_row = cursor.fetchone()
         columns = [col[0] for col in cursor.description]
         user_dict = dict(zip(columns, user_row))
-
+        print(user_dict)
         odoo_vals = {'order_ref': user_dict.get('ID'), }
 
         selenium = SeleniumProcesses()
         selenium.log = list(log)
         success, selenium_exception, msg = selenium.process_order(user_dict, cron_db_id)
-
+        print(success, selenium_exception, msg)
         if success:
 
             selenium.log.append(f"<p>Selenium Process completed at {str(datetime.now())}</p>")
@@ -177,6 +177,7 @@ def main_process(task_id, db, cron_db_id):
 
             raise selenium_exception
     except Exception as e:
+        print(e)
         cursor.execute('UPDATE packaging_order SET status = ? WHERE ID = ?', ('failed', task_id))
         db.commit()
 
