@@ -44,10 +44,10 @@ class FlybarAutomation:
         else:
             return jsonify({'message': 'Unauthorized'}), 200
 
-    def get_cron_counts(self, cron_list):
+    def get_cron_counts(self):
         db = self.db_manager.get_db()
         cursor = db.cursor()
-
+        cron_list = ['cron_1', 'cron_2']
         # Create a temporary table with cron names
         cursor.execute("CREATE TEMPORARY TABLE temp_cron_list (cron TEXT);")
         cursor.executemany("INSERT INTO temp_cron_list VALUES (?)", [(cron,) for cron in cron_list])
