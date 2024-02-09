@@ -28,6 +28,15 @@ class FlybarAutomation:
         self.app.route('/')(self.home)
         self.app.route('/flybar/test', methods=['GET'])(self.test_route)
         self.app.route('/flybar/post/packaging_data', methods=['POST'])(self.post_resource)
+        self.app.route('/flybar/get/data/<int:ID>')(self.get_data_by_id)
+
+    def get_data_by_id(self, ID):
+        db = self.db_manager.get_db()
+        cursor = db.execute('SELECT * FROM packaging_order WHERE ID = ?', (ID,))
+        user_row = cursor.fetchone()
+        columns = [col[0] for col in cursor.description]
+        user_dict = dict(zip(columns, user_row))
+        return user_dict
 
     def run(self):
         self.app.run(host='0.0.0.0', port=5000)

@@ -107,6 +107,7 @@ class SeleniumProcesses:
         self.driver.quit()
 
     def find_order(self, order_name):
+        sleep(1)
         self.driver.find_element(By.XPATH, "//li[@data-bind='click: orderTotals.goto.pick']").click()
         self.driver.find_element(By.XPATH, "//input[@placeholder='Search']").send_keys(order_name)
 
