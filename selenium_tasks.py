@@ -263,7 +263,7 @@ class SeleniumProcesses:
         except Exception as e:
             self.log.append(f"<p>Error in Downloading document: {e}</p>")
             raise Exception(e)
-        sleep(1)
+        sleep(3)
         self.log.append(f"<p>Document Downloaded</p>")
 
     def go_to_homepage(self):
