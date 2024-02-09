@@ -68,6 +68,7 @@ class FlybarAutomation:
         return min(min_keys, key=lambda x: x)
 
     def add_row_to_table(self, data):
+        db = self.db_manager.get_db()
         order_name = data.get('order_name')
         weight = data.get('weight')
         length = data.get('length')
@@ -76,20 +77,18 @@ class FlybarAutomation:
         picking = data.get('picking')
         main_operation_type = data.get('main_operation_type')
         line_json_data = json.dumps(data.get('line_json_data'))
-
         cron_count = self.get_cron_counts()
         cron = self.get_cron_with_min_count(cron_count)
         print(cron, cron_count)
-        with self.db_manager.get_db() as db, db.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO packaging_order 
-                (order_name, weight, length, width, height, status, create_date, picking, main_operation_type, line_json_data, cron) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (order_name, weight, length, width, height, 'pending', datetime.now(), picking, main_operation_type,
-                  line_json_data, cron))
+        cursor = db.execute("""
+            INSERT INTO packaging_order 
+            (order_name, weight, length, width, height, status, create_date, picking, main_operation_type, line_json_data, cron) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (order_name, weight, length, width, height, 'pending', datetime.now(), picking, main_operation_type,
+              line_json_data, cron))
 
-            new_row_id = cursor.lastrowid
-            db.commit()
+        new_row_id = cursor.lastrowid
+        db.commit()
 
         return new_row_id, cron
 
