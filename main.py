@@ -44,20 +44,28 @@ class FlybarAutomation:
         else:
             return jsonify({'message': 'Unauthorized'}), 200
 
-    def get_cron_counts(self):
+    def get_cron_counts(self, cron_list):
         db = self.db_manager.get_db()
         cursor = db.cursor()
-        cron_list = ['cron_1', 'cron_2']
-        in_clause = ', '.join(['?' for _ in cron_list])
 
-        cursor.execute(f"""
-            SELECT cron, COUNT(*) as count
-            FROM packaging_order
-            WHERE status = 'pending' AND cron IN ({in_clause})
-            GROUP BY cron;
-        """, cron_list)
+        # Create a temporary table with cron names
+        cursor.execute("CREATE TEMPORARY TABLE temp_cron_list (cron TEXT);")
+        cursor.executemany("INSERT INTO temp_cron_list VALUES (?)", [(cron,) for cron in cron_list])
+
+        # Use LEFT JOIN to include cron names with 0 counts
+        cursor.execute("""
+            SELECT temp_cron_list.cron, COUNT(packaging_order.cron) as count
+            FROM temp_cron_list
+            LEFT JOIN packaging_order ON temp_cron_list.cron = packaging_order.cron
+                                       AND packaging_order.status = 'pending'
+            GROUP BY temp_cron_list.cron;
+        """)
 
         counts = {row[0]: row[1] for row in cursor.fetchall()}
+
+        # Drop the temporary table
+        cursor.execute("DROP TABLE IF EXISTS temp_cron_list;")
+        db.commit()
         return counts
 
     def get_cron_with_min_count(self, cron_counts):
