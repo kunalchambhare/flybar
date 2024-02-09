@@ -54,7 +54,7 @@ class SeleniumProcesses:
             self.login(cron_db_id)
         except Exception as e:
             self.log.append(f"<p>Login Failed with error: {str(e)}</p>")
-            return False, e, "Login Failed"
+            return False, str(e), "Login Failed"
 
         self.log.append("<p>Login Successful</p>")
 

@@ -36,7 +36,8 @@ class DatabaseManager:
                                     log TEXT,
                                     status_updated_to_odoo BOOLEAN,
                                     odoo_response_message TEXT,
-                                    cron TEXT
+                                    cron TEXT,
+                                    celery_error TEXT
                                 )
                             ''')
 

@@ -108,9 +108,9 @@ def update_status_to_odoo(vals):
             'Content-Type': 'application/json'
         }
         response = requests.request("POST", url, headers=headers, data=payload)
-        return True, response
+        return True, str(response.text)
     except Exception as e:
-        return False, f"Status update failed to ODOO. ERROR: {e}"
+        return False, f"Status update failed to ODOO. ERROR: {str(e)}"
 
 
 def main_process(task_id, db, cron_db_id):
@@ -125,7 +125,7 @@ def main_process(task_id, db, cron_db_id):
         columns = [col[0] for col in cursor.description]
         user_dict = dict(zip(columns, user_row))
 
-        odoo_vals = {'order_ref': user_dict.get('ID'), }
+        odoo_vals = {'order_ref': user_dict.get('ID'), 'rpa_status': False}
 
         selenium = SeleniumProcesses()
         selenium.log = list(log)
@@ -177,7 +177,8 @@ def main_process(task_id, db, cron_db_id):
 
             raise selenium_exception
     except Exception as e:
-        cursor.execute('UPDATE packaging_order SET status = ? WHERE ID = ?', ('failed', task_id))
+        cursor.execute('UPDATE packaging_order SET status = ?, celery_error = ? WHERE ID = ?',
+                       ('failed', str(e), task_id))
         db.commit()
 
     db.commit()
