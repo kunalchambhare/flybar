@@ -35,7 +35,8 @@ class DatabaseManager:
                                     line_json_data TEXT,
                                     log TEXT,
                                     status_updated_to_odoo BOOLEAN,
-                                    odoo_response_message TEXT
+                                    odoo_response_message TEXT,
+                                    cron TEXT
                                 )
                             ''')
 

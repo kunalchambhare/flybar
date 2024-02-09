@@ -33,21 +33,25 @@ class SeleniumProcesses:
         self.driver.implicitly_wait(15)
 
         # GO FLOW CREDENTIALS
-        self.goflow_url = selenium_config.get('GOFLOW_URL')
-        self.goflow_username = selenium_config.get('GOFLOW_USERNAME')
-        self.goflow_password = selenium_config.get('GOFLOW_PASSWORD')
+        self.goflow_url = None
+        self.goflow_username = None
+        self.goflow_password = None
         self.process_type = None
         self.log = []
 
-    def login(self):
+    def login(self, cron_db_id):
+        config = selenium_config.get(f'goflow_cred_{cron_db_id}')
+        self.goflow_url = config.get('GOFLOW_URL')
+        self.goflow_username = config.get('GOFLOW_USERNAME')
+        self.goflow_password = config.get('GOFLOW_PASSWORD')
         self.driver.get(self.goflow_url)
         self.driver.find_element(By.NAME, "userName").send_keys(self.goflow_username)
         self.driver.find_element(By.NAME, "password").send_keys(self.goflow_password)
         self.driver.find_element(By.XPATH, "//button[normalize-space()='Login']").click()
 
-    def process_order(self, vals):
+    def process_order(self, vals, cron_db_id):
         try:
-            self.login()
+            self.login(cron_db_id)
         except Exception as e:
             self.log.append(f"<p>Login Failed with error: {str(e)}</p>")
             return False, e, "Login Failed"
@@ -261,3 +265,7 @@ class SeleniumProcesses:
             raise Exception(e)
         sleep(1)
         self.log.append(f"<p>Document Downloaded</p>")
+
+    def go_to_homepage(self):
+        self.driver.find_element(By.XPATH, "//span[@class='main-logo clickable']").click()
+        self.driver.refresh()

@@ -1,7 +1,7 @@
 # main.py
 from flask import Flask, request, jsonify
 from db import DatabaseManager
-from celery_task import process_pending_tasks
+from celery_task import process_cron
 import jwt
 from datetime import datetime
 import os
@@ -44,46 +44,83 @@ class FlybarAutomation:
         else:
             return jsonify({'message': 'Unauthorized'}), 200
 
+    def get_cron_counts(self):
+        db = self.db_manager.get_db()
+        cursor = db.cursor()
+        cron_list = ['cron_1', 'cron_2']
+        in_clause = ', '.join(['?' for _ in cron_list])
+
+        cursor.execute(f"""
+            SELECT cron, COUNT(*) as count
+            FROM packaging_order
+            WHERE status = 'pending' AND cron IN ({in_clause})
+            GROUP BY cron;
+        """, cron_list)
+
+        counts = {row[0]: row[1] for row in cursor.fetchall()}
+        return counts
+
+    def get_cron_with_min_count(self, cron_counts):
+        if not cron_counts:
+            return None
+        min_count = min(cron_counts.values())
+        min_keys = [key for key, count in cron_counts.items() if count == min_count]
+        return min(min_keys, key=lambda x: x)
+
+    def add_row_to_table(self, data):
+        order_name = data.get('order_name')
+        weight = data.get('weight')
+        length = data.get('length')
+        width = data.get('width')
+        height = data.get('height')
+        picking = data.get('picking')
+        main_operation_type = data.get('main_operation_type')
+        line_json_data = json.dumps(data.get('line_json_data'))
+
+        cron_count = self.get_cron_counts()
+        cron = self.get_cron_with_min_count(cron_count)
+        print(cron, cron_count)
+        with self.db_manager.get_db() as db, db.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO packaging_order 
+                (order_name, weight, length, width, height, status, create_date, picking, main_operation_type, line_json_data, cron) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (order_name, weight, length, width, height, 'pending', datetime.now(), picking, main_operation_type,
+                  line_json_data, cron))
+
+            new_row_id = cursor.lastrowid
+            db.commit()
+
+        return new_row_id, cron
+
     def post_resource(self):
         try:
             received_token = request.headers.get('Authorization')
             response = self.check_access(received_token)
             if response['status'] == 200:
-                self.db_manager.init_db()
+
                 data = json.loads(request.json)
                 order_name = data.get('order_name')
-                weight = data.get('weight')
-                length = data.get('length')
-                width = data.get('width')
-                height = data.get('height')
-                picking = data.get('picking')
-                main_operation_type = data.get('main_operation_type')
-                line_json_data = json.dumps(data.get('line_json_data'))
-
+                new_row_id, cron = self.add_row_to_table(data)
                 db = self.db_manager.get_db()
                 cursor = db.cursor()
 
-                cursor.execute(
-                    'INSERT INTO packaging_order (order_name, weight, length, width, height, status, create_date, picking, main_operation_type, line_json_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    (order_name, weight, length, width, height, 'pending', datetime.now(), picking, main_operation_type,
-                     line_json_data))
-                new_row_id = cursor.lastrowid
-                db.commit()
+                cron_db_id = int(cron.split('_')[1])
 
-                cursor.execute('SELECT * FROM status_boolean_table WHERE ID = ?', (1,))
+                cursor.execute('SELECT * FROM status_boolean_table WHERE ID = ?', (cron_db_id,))
                 existing_row = cursor.fetchone()
 
                 if not existing_row:
-                    cursor.execute('INSERT INTO status_boolean_table (ID, status) VALUES (?, ?)', (1, False))
+                    cursor.execute('INSERT INTO status_boolean_table (ID, status) VALUES (?, ?)', (cron_db_id, False))
                     db.commit()
 
-                cursor.execute('SELECT * FROM status_boolean_table WHERE ID = ?', (1,))
+                cursor.execute('SELECT * FROM status_boolean_table WHERE ID = ?', (cron_db_id,))
                 existing_row = cursor.fetchone()
 
                 if not existing_row[1]:
-                    cursor.execute('UPDATE status_boolean_table SET status = ? WHERE ID = ?', (True, 1))
+                    cursor.execute('UPDATE status_boolean_table SET status = ? WHERE ID = ?', (True, cron_db_id))
                     db.commit()
-                    process_pending_tasks.delay()
+                    process_cron.delay(cron)
 
                 result = {'message': f'Order: {order_name} Added to Queue',
                           "Ref": f'{new_row_id}'}
