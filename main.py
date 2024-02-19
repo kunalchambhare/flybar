@@ -8,6 +8,7 @@ import os
 from config import JWT_SECRET_KEY, DATABASE, selenium_config
 import logging
 import json
+from time import sleep
 
 _logger = logging.getLogger(__name__)
 
@@ -118,7 +119,7 @@ class FlybarAutomation:
                 order_name = data.get('order_name')
 
                 new_row_id, cron = self.add_row_to_table(data)
-
+                sleep(1)
                 db = self.db_manager.get_db()
                 cursor = db.cursor()
 
