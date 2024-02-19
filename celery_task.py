@@ -19,9 +19,14 @@ celery = Celery(
 
 from config import DATABASE, selenium_config
 
+# odoo_connection_status, odoo_connection = False, None
+
 
 def connect_odoo_rpc():
-    # ODOORPC CREDENTIALS
+    # global odoo_connection_status, odoo_connection
+    # if odoo_connection_status and odoo_connection:
+    #     return odoo_connection_status, odoo_connection
+
     odoo_connection_config = selenium_config.get('staging_config')
     if odoo_connection_config:
         odoo_username = odoo_connection_config.get('ODOO_USERNAME')
@@ -35,11 +40,13 @@ def connect_odoo_rpc():
             if use_odoo_rpc:
                 odoo = odoorpc.ODOO(odoo_url, port=odoo_port)
                 odoo.login(odoo_db, odoo_username, odoo_password)
+                # odoo_connection_status, odoo_connection = True, odoo
                 return True, odoo
             else:
                 sock_common = xc.ServerProxy(odoo_url + '/xmlrpc/common', allow_none=True)
                 uid = sock_common.login(odoo_db, odoo_username, odoo_password)
                 sock = xc.ServerProxy(odoo_url + '/xmlrpc/object', allow_none=True)
+                # odoo_connection_status, odoo_connection = True, [uid, sock]
                 return True, [uid, sock]
         except Exception as e:
             return False, e
@@ -125,7 +132,7 @@ def main_process(task_id, db, cron_db_id):
         columns = [col[0] for col in cursor.description]
         user_dict = dict(zip(columns, user_row))
 
-        odoo_vals = {'order_ref': user_dict.get('ID'), 'rpa_status': False}
+        odoo_vals = {'order_ref': user_dict.get('ID')}
 
         selenium = SeleniumProcesses()
         selenium.log = list(log)
@@ -148,44 +155,40 @@ def main_process(task_id, db, cron_db_id):
                 cursor.execute('UPDATE packaging_order SET status = ?, log = ? WHERE ID = ?',
                                ('completed but document not uploaded', " ".join(selenium.log), task_id))
                 db.commit()
-
-            odoo_vals.update({'log': " ".join(selenium.log)})
-
-            call_successful, message = update_status_to_odoo(odoo_vals)
-
-            cursor.execute(
-                'UPDATE packaging_order SET status_updated_to_odoo = ?, odoo_response_message = ? WHERE ID = ?',
-                (call_successful, message, task_id))
-            db.commit()
         else:
 
             selenium.log.append(
                 f"<p>Selenium Process Error: {selenium_exception} {msg}. Completed at {str(datetime.now())}</p>")
             odoo_vals.update({'status': 'require_manual_shipment'})
-            cursor.execute('UPDATE packaging_order SET error = ?, msg = ?, log = ? WHERE ID = ?',
-                           (str(selenium_exception), str(msg), " ".join(selenium.log), task_id))
+            cursor.execute('UPDATE packaging_order SET error = ?, msg = ?, log = ?, status = ? WHERE ID = ?',
+                           (str(selenium_exception), str(msg), " ".join(selenium.log), 'error_in_selenium_process',
+                            task_id))
             db.commit()
 
-            odoo_vals.update({'log': " ".join(selenium.log)})
+        odoo_vals.update({'log': " ".join(selenium.log)})
 
+        try:
             call_successful, message = update_status_to_odoo(odoo_vals)
-
+            selenium.log.append(f"Status Updated to Odoo</p>")
             cursor.execute(
                 'UPDATE packaging_order SET status_updated_to_odoo = ?, odoo_response_message = ? WHERE ID = ?',
                 (call_successful, message, task_id))
             db.commit()
-
-            raise selenium_exception
+        except Exception as e:
+            selenium.log.append(f"<p>Error in updating status to Odoo: {e}</p>")
+            cursor.execute(
+                'UPDATE packaging_order SET error_odoo_update = ?, msg_odoo_update = ?, log = ? WHERE ID = ?',
+                (str(e), str("ERROR IN UPDATING STATUS TO ODOO"), " ".join(selenium.log), task_id))
     except Exception as e:
         cursor.execute('UPDATE packaging_order SET status = ?, celery_error = ? WHERE ID = ?',
                        ('failed', str(e), task_id))
         db.commit()
-
     db.commit()
 
 
 @celery.task
 def process_cron(cron):
+
     cron_db_id = int(cron.split('_')[1])
     db = sqlite3.connect(DATABASE)
     cursor = db.execute('SELECT * FROM packaging_order WHERE status = ? AND cron = ? ORDER BY create_date ASC LIMIT 1',
@@ -194,6 +197,7 @@ def process_cron(cron):
 
     if pending_task:
         task_id = pending_task[0]
+
         main_process(task_id, db, cron_db_id)
 
         cursor = db.execute(

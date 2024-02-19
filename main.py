@@ -5,7 +5,7 @@ from celery_task import process_cron
 import jwt
 from datetime import datetime
 import os
-from config import JWT_SECRET_KEY, DATABASE
+from config import JWT_SECRET_KEY, DATABASE, selenium_config
 import logging
 import json
 
@@ -56,12 +56,11 @@ class FlybarAutomation:
     def get_cron_counts(self):
         db = self.db_manager.get_db()
         cursor = db.cursor()
-        cron_list = ['cron_1', 'cron_2']
-        # Create a temporary table with cron names
+        cron_list = selenium_config.get('cron_list')
+
         cursor.execute("CREATE TEMPORARY TABLE temp_cron_list (cron TEXT);")
         cursor.executemany("INSERT INTO temp_cron_list VALUES (?)", [(cron,) for cron in cron_list])
 
-        # Use LEFT JOIN to include cron names with 0 counts
         cursor.execute("""
             SELECT temp_cron_list.cron, COUNT(packaging_order.cron) as count
             FROM temp_cron_list
@@ -117,7 +116,9 @@ class FlybarAutomation:
 
                 data = json.loads(request.json)
                 order_name = data.get('order_name')
+
                 new_row_id, cron = self.add_row_to_table(data)
+
                 db = self.db_manager.get_db()
                 cursor = db.cursor()
 
