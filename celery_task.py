@@ -73,7 +73,7 @@ def upload_document(vals):
     if found_file_path:
         success, odoo_obj = connect_odoo_rpc()
         if success:
-            odoo_connection_config = selenium_config.get('local_config')
+            odoo_connection_config = selenium_config.get('staging_config')
             use_odoo_rpc = odoo_connection_config.get('use_odoo_rpc')
             odoo_password = odoo_connection_config.get('ODOO_PASSWORD')
             odoo_db = odoo_connection_config.get('ODOO_DATABASE')
