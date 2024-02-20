@@ -18,16 +18,28 @@ selenium_config = {
 
     'cron_list': ['cron_1', 'cron_2'],
 
+    # 'goflow_cred_1': {
+    #     'GOFLOW_URL': "https://bistasolutions.goflow.com/",
+    #     'GOFLOW_USERNAME': "robin.bahadur@bistasolutions.com",
+    #     'GOFLOW_PASSWORD': "Flyb@r2023",
+    # },
+    #
+    # 'goflow_cred_2': {
+    #     'GOFLOW_URL': "https://bistasolutions.goflow.com/",
+    #     'GOFLOW_USERNAME': "robin.bahadur@bistasolutions.com",
+    #     'GOFLOW_PASSWORD': "Flyb@r2023",
+    # },
+
     'goflow_cred_1': {
-        'GOFLOW_URL': "https://bistasolutions.goflow.com/",
-        'GOFLOW_USERNAME': "robin.bahadur@bistasolutions.com",
-        'GOFLOW_PASSWORD': "Flyb@r2023",
+        'GOFLOW_URL': "https://fb.goflow.com/",
+        'GOFLOW_USERNAME': "Robinb",
+        'GOFLOW_PASSWORD': "Robin1600!",
     },
 
     'goflow_cred_2': {
-        'GOFLOW_URL': "https://bistasolutions.goflow.com/",
-        'GOFLOW_USERNAME': "robin.bahadur@bistasolutions.com",
-        'GOFLOW_PASSWORD': "Flyb@r2023",
+        'GOFLOW_URL': "https://fb.goflow.com/",
+        'GOFLOW_USERNAME': "fdipak",
+        'GOFLOW_PASSWORD': "FD!p_b!st_24",
     },
 
     'local_config': {
