@@ -1,3 +1,4 @@
+# selenium_tasks.py
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -15,7 +16,6 @@ import json
 
 class SeleniumProcesses:
     def __init__(self):
-
         chrome_options = webdriver.ChromeOptions()
 
         self.download_directory = selenium_config.get('DOWNLOAD_DIRECTORY')
@@ -40,23 +40,21 @@ class SeleniumProcesses:
         self.log = []
 
     def login(self, cron_db_id):
-        config = selenium_config.get(f'goflow_cred_{cron_db_id}')
-        self.goflow_url = config.get('GOFLOW_URL')
-        self.goflow_username = config.get('GOFLOW_USERNAME')
-        self.goflow_password = config.get('GOFLOW_PASSWORD')
-        self.driver.get(self.goflow_url)
-        self.driver.find_element(By.NAME, "userName").send_keys(self.goflow_username)
-        self.driver.find_element(By.NAME, "password").send_keys(self.goflow_password)
-        self.driver.find_element(By.XPATH, "//button[normalize-space()='Login']").click()
-
-    def process_order(self, vals, cron_db_id):
         try:
-            self.login(cron_db_id)
+            config = selenium_config.get(f'goflow_cred_{cron_db_id}')
+            self.goflow_url = config.get('GOFLOW_URL')
+            self.goflow_username = config.get('GOFLOW_USERNAME')
+            self.goflow_password = config.get('GOFLOW_PASSWORD')
+            self.driver.get(self.goflow_url)
+            self.driver.find_element(By.NAME, "userName").send_keys(self.goflow_username)
+            self.driver.find_element(By.NAME, "password").send_keys(self.goflow_password)
+            self.driver.find_element(By.XPATH, "//button[normalize-space()='Login']").click()
+            self.log.append("<p>Login Successful</p>")
         except Exception as e:
             self.log.append(f"<p>Login Failed with error: {str(e)}</p>")
             return False, str(e), "Login Failed"
 
-        self.log.append("<p>Login Successful</p>")
+    def process_order(self, vals):
 
         try:
             func_timeout(180, self.execute_process, args=(self.driver, vals))
