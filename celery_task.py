@@ -188,7 +188,7 @@ def update_status(db, selenium, odoo_vals, task_id):
         db.commit()
 
 
-@celery.task
+@celery.task(serializer='pickle')
 def process_cron(cron, selenium_object=None):
     cron_db_id = int(cron.split('_')[1])
     db = sqlite3.connect(DATABASE)
