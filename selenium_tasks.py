@@ -102,7 +102,7 @@ class SeleniumProcesses:
 
         sleep(3)
         self.download_document(actions)
-        self.driver.quit()
+        # self.driver.quit()
 
     def find_order(self, order_name):
         sleep(1)

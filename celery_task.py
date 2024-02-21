@@ -122,9 +122,9 @@ def update_status_to_odoo(vals):
 
 
 def main_process(task_id, db, selenium):
-    cursor = db.execute('UPDATE packaging_order SET status = ? WHERE ID = ?', ('processing', task_id))
-    db.commit()
     try:
+        cursor = db.execute('UPDATE packaging_order SET status = ? WHERE ID = ?', ('processing', task_id))
+        db.commit()
         cursor = db.execute('SELECT * FROM packaging_order WHERE ID = ?', (task_id,))
         user_row = cursor.fetchone()
         columns = [col[0] for col in cursor.description]
@@ -156,7 +156,7 @@ def main_process(task_id, db, selenium):
         else:
 
             selenium.log.append(
-                f"<p>Selenium Process Error: {selenium_exception} {msg}. Completed at {str(datetime.now())}</p>")
+                f"<p>Selenium Process Error: {selenium_exception} {msg}. <br> Completed at {str(datetime.now())}</p>")
             odoo_vals.update({'status': 'require_manual_shipment'})
             cursor.execute('UPDATE packaging_order SET error = ?, msg = ?, log = ?, status = ? WHERE ID = ?',
                            (str(selenium_exception), str(msg), " ".join(selenium.log), 'error_in_selenium_process',
@@ -198,26 +198,22 @@ def process_cron(cron, selenium_object=None):
 
     if pending_task:
         task_id = pending_task[0]
-
-        log = []
-        start_time = datetime.now()
-        log.append(f'<p>Process started at {str(start_time)}.<p>')
-
         try:
             if selenium_object is None:
                 selenium_object = SeleniumProcesses()
-                selenium_object.log = list(log)
+                selenium_object.log = [f'<p>Process started at {str(datetime.now())}.<p>']
                 selenium_object.login(cron_db_id)
 
             else:
-                selenium_object.log = list(log)
+                selenium_object.log = [f'<p>Process started at {str(datetime.now())}.<p>']
                 selenium_object.go_to_homepage()
                 selenium_object.log.append(f'<p>Went to homepage</p>')
-                selenium_success, odoo_vals = main_process(task_id, db, selenium_object)
 
-                update_status(db, selenium_object, odoo_vals, task_id)
-                if not selenium_success:
-                    selenium_object = None
+            selenium_success, odoo_vals = main_process(task_id, db, selenium_object)
+
+            update_status(db, selenium_object, odoo_vals, task_id)
+            if not selenium_success:
+                selenium_object = None
 
         except Exception as e:
             cursor.execute('UPDATE packaging_order SET status = ?, celery_error = ? WHERE ID = ?',
