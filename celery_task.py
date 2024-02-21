@@ -10,6 +10,7 @@ import base64
 import shutil
 import requests
 import json
+import time
 
 celery = Celery(
     'celery_tasks',
@@ -24,10 +25,6 @@ from config import DATABASE, selenium_config
 
 
 def connect_odoo_rpc():
-    # global odoo_connection_status, odoo_connection
-    # if odoo_connection_status and odoo_connection:
-    #     return odoo_connection_status, odoo_connection
-
     odoo_connection_config = selenium_config.get('staging_config')
     if odoo_connection_config:
         odoo_username = odoo_connection_config.get('ODOO_USERNAME')
@@ -41,20 +38,18 @@ def connect_odoo_rpc():
             if use_odoo_rpc:
                 odoo = odoorpc.ODOO(odoo_url, port=odoo_port)
                 odoo.login(odoo_db, odoo_username, odoo_password)
-                # odoo_connection_status, odoo_connection = True, odoo
                 return True, odoo
             else:
                 sock_common = xc.ServerProxy(odoo_url + '/xmlrpc/common', allow_none=True)
                 uid = sock_common.login(odoo_db, odoo_username, odoo_password)
                 sock = xc.ServerProxy(odoo_url + '/xmlrpc/object', allow_none=True)
-                # odoo_connection_status, odoo_connection = True, [uid, sock]
                 return True, [uid, sock]
         except Exception as e:
             return False, e
     return False, "Odoo Connection Credentials not found."
 
 
-def upload_document(vals):
+def upload_document(vals, odoo_obj):
     download_directory = selenium_config.get('DOWNLOAD_DIRECTORY')
     move_path = selenium_config.get('MOVE_PATH')
 
@@ -71,8 +66,7 @@ def upload_document(vals):
             break
 
     if found_file_path:
-        success, odoo_obj = connect_odoo_rpc()
-        if success:
+        if odoo_obj:
             odoo_connection_config = selenium_config.get('staging_config')
             use_odoo_rpc = odoo_connection_config.get('use_odoo_rpc')
             odoo_password = odoo_connection_config.get('ODOO_PASSWORD')
@@ -121,7 +115,7 @@ def update_status_to_odoo(vals):
         return False, f"Status update failed to ODOO. ERROR: {str(e)}"
 
 
-def main_process(task_id, db, selenium):
+def main_process(task_id, db, selenium, odoo_obj):
     try:
         cursor = db.execute('UPDATE packaging_order SET status = ? WHERE ID = ?', ('processing', task_id))
         db.commit()
@@ -139,7 +133,7 @@ def main_process(task_id, db, selenium):
             selenium.log.append(f"<p>Selenium Process completed at {str(datetime.now())}</p>")
 
             try:
-                res = upload_document(user_dict)
+                res = upload_document(user_dict, odoo_obj)
                 selenium.log.append(f"<p>{res}</p>")
                 odoo_vals.update({'status': 'doc_generated'})
                 cursor.execute('UPDATE packaging_order SET status = ?, log = ? WHERE ID = ?',
@@ -188,37 +182,23 @@ def update_status(db, selenium, odoo_vals, task_id):
         db.commit()
 
 
-@celery.task(serializer='pickle')
-def process_cron(cron, selenium_object=None):
+@celery.task
+def process_cron(cron):
+    selenium_object = False
+    odoo_obj = False
+    start_time = time.time()
     cron_db_id = int(cron.split('_')[1])
     db = sqlite3.connect(DATABASE)
-    cursor = db.execute('SELECT * FROM packaging_order WHERE status = ? AND cron = ? ORDER BY create_date ASC LIMIT 1',
-                        ('pending', cron))
-    pending_task = cursor.fetchone()
 
-    if pending_task:
-        task_id = pending_task[0]
-        try:
-            if selenium_object is None:
-                selenium_object = SeleniumProcesses()
-                selenium_object.log = [f'<p>Process started at {str(datetime.now())}.<p>']
-                selenium_object.login(cron_db_id)
+    while True:
+        current_time = time.time()
+        elapsed_time = current_time - start_time
 
-            else:
-                selenium_object.log = [f'<p>Process started at {str(datetime.now())}.<p>']
-                selenium_object.go_to_homepage()
-                selenium_object.log.append(f'<p>Went to homepage</p>')
+        if elapsed_time >= 3600:
+            selenium_object = False
 
-            selenium_success, odoo_vals = main_process(task_id, db, selenium_object)
-
-            update_status(db, selenium_object, odoo_vals, task_id)
-            if not selenium_success:
-                selenium_object = None
-
-        except Exception as e:
-            cursor.execute('UPDATE packaging_order SET status = ?, celery_error = ? WHERE ID = ?',
-                           ('failed', str(e), task_id))
-            db.commit()
+        if elapsed_time >= 1800:
+            odoo_obj = False
 
         cursor = db.execute(
             'SELECT * FROM packaging_order WHERE status = ? AND cron = ? ORDER BY create_date ASC LIMIT 1',
@@ -226,13 +206,37 @@ def process_cron(cron, selenium_object=None):
         pending_task = cursor.fetchone()
 
         if pending_task:
-            process_cron.delay(cron, selenium_object)
+            task_id = pending_task[0]
+            try:
+                if not selenium_object:
+                    selenium_object = SeleniumProcesses()
+                    selenium_object.log = [f'<p>Process started at {str(datetime.now())}.<p>']
+                    selenium_object.login(cron_db_id)
+
+                else:
+                    selenium_object.log = [f'<p>Process started at {str(datetime.now())}.<p>']
+                    selenium_object.go_to_homepage()
+                    selenium_object.log.append(f'<p>Went to homepage</p>')
+
+                if not odoo_obj:
+                    success, odoo_obj = connect_odoo_rpc()
+                    if not success:
+                        raise Exception(str(odoo_obj))
+
+                selenium_success, odoo_vals = main_process(task_id, db, selenium_object, odoo_obj)
+
+                update_status(db, selenium_object, odoo_vals, task_id)
+                if not selenium_success:
+                    selenium_object = False
+
+            except Exception as e:
+                cursor.execute('UPDATE packaging_order SET status = ?, celery_error = ? WHERE ID = ?',
+                               ('failed', str(e), task_id))
+                db.commit()
         else:
             cursor.execute('UPDATE status_boolean_table SET status = ? WHERE ID = ?', (False, cron_db_id))
             db.commit()
-    else:
-        cursor.execute('UPDATE status_boolean_table SET status = ? WHERE ID = ?', (False, cron_db_id))
-        db.commit()
+            break
 
 
 if __name__ == '__main__':
