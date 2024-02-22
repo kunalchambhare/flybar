@@ -6,9 +6,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 from time import sleep
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-import os
-import base64
-import shutil
 from func_timeout import func_timeout, FunctionTimedOut
 from config import selenium_config
 import json
@@ -122,6 +119,23 @@ class SeleniumProcesses:
         self.driver.find_element(By.XPATH,
                                  "(//button[@class='button-secondary button-icon icon-more tooltip-wrapper dropdown-toggle'])[1]").click()
         self.driver.find_element(By.XPATH, "//a[normalize-space()='Pack & Ship']").click()
+
+        try:
+            self.driver.implicitly_wait(2)
+
+            packaging_instruction_el = self.driver.find_elements(By.XPATH,
+                                                                 "//h2[normalize-space()='Packing Instructions']")
+            next_button_el = self.driver.find_elements(By.XPATH, "//button[normalize-space()='Next']")
+
+            if len(packaging_instruction_el) or len(next_button_el):
+                info = self.driver.find_element(By.XPATH, "//p[@class='notes-item-text']").text
+                self.log.append(f"<p>Info after clicking pack and ship button: <br>{info}</p>")
+                next_button_el[0].click()
+        except:
+            pass
+        finally:
+            self.driver.implicitly_wait(15)
+
         sleep(1)
 
     def do_pack_all(self, weight, length, width, height):
@@ -262,7 +276,7 @@ class SeleniumProcesses:
         except Exception as e:
             self.log.append(f"<p>Error in Downloading document: {e}</p>")
             raise Exception(e)
-        sleep(3)
+        sleep(5)
         self.log.append(f"<p>Document Downloaded</p>")
 
     def go_to_homepage(self):

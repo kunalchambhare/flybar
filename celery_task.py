@@ -236,6 +236,8 @@ def process_cron(cron):
         else:
             cursor.execute('UPDATE status_boolean_table SET status = ? WHERE ID = ?', (False, cron_db_id))
             db.commit()
+            if selenium_object.driver is not None:
+                selenium_object.driver.quit()
             break
 
 
