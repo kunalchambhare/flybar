@@ -39,7 +39,8 @@ class FlybarAutomation:
             response = self.check_access(received_token)
             if response['status'] == 200:
                 try:
-                    output_path = _get_bank_statements()
+                    # output_path = _get_bank_statements()
+                    output_path = 'DailyDownload_Report.csv'
                     return send_file(output_path, as_attachment=True)
                 except Exception as e:
                     logging.error(f'An error occurred: {e}', exc_info=True)
