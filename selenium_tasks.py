@@ -9,6 +9,91 @@ from selenium.webdriver.common.keys import Keys
 from func_timeout import func_timeout, FunctionTimedOut
 from config import selenium_config
 import json
+import os
+import datetime
+
+
+def _get_bank_statements():
+    chrome_options = webdriver.ChromeOptions()
+
+    download_directory = "/home/ubuntu/Downloads/statements"
+
+    chrome_options.add_experimental_option("prefs", {
+        "download.default_directory": download_directory,
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "safebrowsing.enabled": False
+    })
+    chrome_options.add_argument("--disable-popup-blocking")
+    # chrome_options.add_argument("--headless")
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    driver.maximize_window()
+    driver.implicitly_wait(15)
+
+    url = "https://idbny.olbanking.com/"
+    company_id = "3513"
+    user_id = "Odoo1223"
+    password = "OdooFlybar2024!"
+
+    driver.get(url)
+    driver.find_element(By.XPATH, "//input[@id='company']").send_keys(company_id)
+    driver.find_element(By.XPATH, "//input[@id='user']").send_keys(user_id)
+
+    driver.find_element(By.XPATH, "//button[@id='login']").click()
+
+    driver.find_element(By.XPATH, "//input[@id='passwordPrompt']").send_keys(password)
+    driver.find_element(By.XPATH, "//button[@id='login']").click()
+
+    driver.find_element(By.XPATH, "//span[normalize-space()='Account Information']").click()
+    driver.find_element(By.XPATH, "//a[normalize-space()='Balance Reporting']").click()
+
+    table_element = driver.find_element(By.XPATH, "//table[@class='listtable']")
+
+    column_headers = table_element.find_elements(By.TAG_NAME, "th")
+
+    date_column_index = None
+    for index, column_header in enumerate(column_headers):
+        if column_header.text.strip() == "Date":
+            date_column_index = index + 1
+            break
+
+    tbody_element = table_element.find_element(By.TAG_NAME, "tbody")
+
+    rows = tbody_element.find_elements(By.TAG_NAME, "tr")
+
+    for row in rows:
+        columns_datas = row.find_elements(By.TAG_NAME, "td")
+        td_index = 0
+        for column_data in columns_datas:
+            td_index += 1
+            if td_index == date_column_index:
+                link_element = column_data.find_element(By.TAG_NAME, "a")
+                link_element.click()
+                break
+        break
+
+    driver.find_element(By.XPATH, "//a[normalize-space()='Previous Business Day']").click()
+    tbody_element.find_element(By.XPATH, "//span[@class='ui-button-text'][normalize-space()='Download']").click()
+    sleep(2)
+    driver.quit()
+
+    def get_creation_time(file_path):
+        return os.path.getctime(file_path)
+
+    def rename_file(file_path, new_name):
+        os.rename(file_path, os.path.join(os.path.dirname(file_path), new_name))
+
+    files = [f for f in os.listdir(download_directory) if os.path.isfile(os.path.join(download_directory, f))]
+
+    latest_file = max(files, key=lambda f: get_creation_time(os.path.join(download_directory, f)))
+
+    yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+    yesterday_date = yesterday.strftime("%Y-%m-%d")
+
+    file_name, file_extension = os.path.splitext(latest_file)
+    new_file_name = f"{yesterday_date}{file_extension}"
+    rename_file(os.path.join(download_directory, latest_file), new_file_name)
+    return download_directory + '/' + new_file_name
 
 
 class SeleniumProcesses:
