@@ -31,7 +31,7 @@ class FlybarAutomation:
         self.app.route('/flybar/test', methods=['GET'])(self.test_route)
         self.app.route('/flybar/post/packaging_data', methods=['POST'])(self.post_resource)
         self.app.route('/flybar/get/data/<int:row_id>')(self.get_data_by_id)
-        self.app.route('/flybar/get/bank_statements')(self.get_bank_statements)
+        self.app.route('/flybar/get/bank_statements', methods=['POST'])(self.get_bank_statements)
 
     def get_bank_statements(self):
         try:
@@ -39,8 +39,7 @@ class FlybarAutomation:
             response = self.check_access(received_token)
             if response['status'] == 200:
                 try:
-                    # output_path = _get_bank_statements()
-                    output_path = 'DailyDownload_Report.csv'
+                    output_path = _get_bank_statements()
                     return send_file(output_path, as_attachment=True)
                 except Exception as e:
                     logging.error(f'An error occurred: {e}', exc_info=True)
