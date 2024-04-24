@@ -123,6 +123,13 @@ def _update_order_status(tag_name):
     tag_select.find_element(By.TAG_NAME, "input").send_keys(tag_name)
     driver.find_element(By.XPATH, "//div[text()='" + tag_name.lower() + "']").click()
     driver.find_element(By.XPATH, "//button[normalize-space()='Filters']").click()
+
+    driver.implicitly_wait(1)
+    no_order_found = driver.find_elements(By.XPATH, "//h2[normalize-space()='No Orders Found']")
+    if len(no_order_found) > 0:
+        raise Exception("No Orders Found")
+    driver.implicitly_wait(15)
+
     select_all_input = driver.find_element(By.XPATH, "//th//input[@type='checkbox']")
     actions.move_to_element(select_all_input).perform()
     sleep(1)
