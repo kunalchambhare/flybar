@@ -44,6 +44,7 @@ class FlybarAutomation:
                     data = request.json
                     tag_name = data.get('tag_name')
                     _update_order_status(tag_name)
+                    return jsonify(message="Order status updated successfully", status=200), 200
                 except Exception as e:
                     logging.error(f'An error occurred: {e}', exc_info=True)
                     return jsonify(message=str(e), status=401), 401
