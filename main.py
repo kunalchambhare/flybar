@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify, send_file
 from db import DatabaseManager
 from celery_task import process_cron
-from selenium_tasks import _get_bank_statements
+from selenium_tasks import _get_bank_statements, _update_order_status
 import jwt
 from datetime import datetime
 import os
@@ -29,9 +29,28 @@ class FlybarAutomation:
     def register_routes(self):
         self.app.route('/')(self.home)
         self.app.route('/flybar/test', methods=['GET'])(self.test_route)
-        self.app.route('/flybar/post/packaging_data', methods=['POST'])(self.post_resource)
-        self.app.route('/flybar/get/data/<int:row_id>')(self.get_data_by_id)
+        # self.app.route('/flybar/post/packaging_data', methods=['POST'])(self.post_resource)
+        # self.app.route('/flybar/get/data/<int:row_id>')(self.get_data_by_id)
         self.app.route('/flybar/get/bank_statements', methods=['POST'])(self.get_bank_statements)
+        self.app.route('/flybar/update/order_status', methods=['POST'])(self.update_order_status)
+
+
+    def update_order_status(self):
+        try:
+            received_token = request.headers.get('Authorization')
+            response = self.check_access(received_token)
+            if response['status'] == 200:
+                try:
+                    data = json.loads(request.json)
+                    tag_name = data.get('tag_name')
+                    _update_order_status(tag_name)
+                except Exception as e:
+                    logging.error(f'An error occurred: {e}', exc_info=True)
+                    return jsonify(message=str(e), status=401), 401
+        except Exception as e:
+            logging.error(f'An error occurred: {e}', exc_info=True)
+            return jsonify(message=str(e), status=401), 401
+
 
     def get_bank_statements(self):
         try:

@@ -11,9 +11,10 @@ from config import selenium_config
 import json
 import os
 import datetime
+from selenium.webdriver.support.ui import Select
 
 
-def _get_bank_statements():
+def _init_driver():
     chrome_options = webdriver.ChromeOptions()
 
     download_directory = "/home/ubuntu/Downloads/statements"
@@ -29,7 +30,13 @@ def _get_bank_statements():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
     driver.maximize_window()
     driver.implicitly_wait(15)
+    return driver
 
+
+def _get_bank_statements():
+    driver = _init_driver()
+
+    download_directory = "/home/ubuntu/Downloads/statements"
     url = "https://idbny.olbanking.com/"
     company_id = "3513"
     user_id = "Odoo1223"
@@ -94,6 +101,47 @@ def _get_bank_statements():
     new_file_name = f"{yesterday_date}{file_extension}"
     rename_file(os.path.join(download_directory, latest_file), new_file_name)
     return download_directory + '/' + new_file_name
+
+
+def _update_order_status(tag_name):
+    driver = _init_driver()
+    actions = ActionChains(driver)
+
+    goflow_url = 'https://bistasolutions.goflow.com/'
+    goflow_username = 'robin.bahadur@bistasolutions.com'
+    goflow_password = 'Flyb@r2023'
+
+    driver.get(goflow_url)
+    driver.find_element(By.NAME, "userName").send_keys(goflow_username)
+    driver.find_element(By.NAME, "password").send_keys(goflow_password)
+    driver.find_element(By.XPATH, "//button[normalize-space()='Login']").click()
+
+    driver.find_element(By.XPATH, "//div[@class='summary-value']").click()
+    driver.find_element(By.XPATH, "//button[normalize-space()='Filters']").click()
+    tag_select = driver.find_element(By.XPATH, "//tags-select")
+    tag_select.click()
+    tag_select.find_element(By.TAG_NAME, "input").send_keys(tag_name)
+    driver.find_element(By.XPATH, "//div[text()='" + tag_name.lower() + "']").click()
+    driver.find_element(By.XPATH, "//button[normalize-space()='Filters']").click()
+    select_all_input = driver.find_element(By.XPATH, "//th//input[@type='checkbox']")
+    actions.move_to_element(select_all_input).perform()
+    sleep(1)
+    select_all_input.click()
+    driver.find_element(By.XPATH, "//button[normalize-space()='Actions']").click()
+    driver.find_element(By.XPATH, "//span[normalize-space()='Change Order Status']").click()
+    option_select = driver.find_element(By.XPATH, "//div[@class='dialog-modal-wrapper']//select[1]")
+    select = Select(option_select)
+    select.select_by_value("Shipped")
+    driver.find_element(By.XPATH, "//button//span[normalize-space()='Save']").click()
+
+    while True:
+        close_button = driver.find_elements(By.XPATH, "//button[normalize-space()='Close']")
+        if len(close_button):
+            close_button[0].click()
+            break
+        else:
+            sleep(1)
+    driver.quit()
 
 
 class SeleniumProcesses:
