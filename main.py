@@ -41,7 +41,7 @@ class FlybarAutomation:
             response = self.check_access(received_token)
             if response['status'] == 200:
                 try:
-                    data = json.loads(request.json)
+                    data = request.json
                     tag_name = data.get('tag_name')
                     _update_order_status(tag_name)
                 except Exception as e:
