@@ -2,7 +2,7 @@
 from flask import Flask, request, jsonify, send_file
 from db import DatabaseManager
 from celery_task import process_cron
-from selenium_tasks import _get_bank_statements, _update_order_status
+from selenium_tasks import _get_bank_statements, _update_order_status, _download_order_info
 import jwt
 from datetime import datetime
 import os
@@ -33,7 +33,34 @@ class FlybarAutomation:
         # self.app.route('/flybar/get/data/<int:row_id>')(self.get_data_by_id)
         self.app.route('/flybar/get/bank_statements', methods=['POST'])(self.get_bank_statements)
         self.app.route('/flybar/update/order_status', methods=['POST'])(self.update_order_status)
+        self.app.route('/flybar/get/order_data', methods=['POST'])(self.get_order_data)
 
+    def get_order_data(self):
+        try:
+            received_token = request.headers.get('Authorization')
+            response = self.check_access(received_token)
+            if response['status'] == 200:
+                try:
+
+                    download_directory = "/home/ubuntu/Downloads/goflow_orders"
+                    files = os.listdir(download_directory)
+                    for file in files:
+                        file_path = os.path.join(download_directory, file)
+                        if os.path.isfile(file_path):
+                            os.remove(file_path)
+
+                    _download_order_info()
+
+                    files = os.listdir(download_directory)
+                    file_name = files[0]
+                    file_path = os.path.join(download_directory, file_name)
+                    return send_file(file_path, as_attachment=True)
+                except Exception as e:
+                    logging.error(f'An error occurred: {e}', exc_info=True)
+                    return jsonify(message=str(e), status=401), 401
+        except Exception as e:
+            logging.error(f'An error occurred: {e}', exc_info=True)
+            return jsonify(message=str(e), status=401), 401
 
     def update_order_status(self):
         try:
@@ -51,7 +78,6 @@ class FlybarAutomation:
         except Exception as e:
             logging.error(f'An error occurred: {e}', exc_info=True)
             return jsonify(message=str(e), status=401), 401
-
 
     def get_bank_statements(self):
         try:

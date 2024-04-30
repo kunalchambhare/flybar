@@ -151,6 +151,44 @@ def _update_order_status(tag_name):
     driver.quit()
 
 
+def _download_order_info():
+    driver = _init_driver()
+    actions = ActionChains(driver)
+
+    goflow_url = 'https://fb.goflow.com/'
+    goflow_username = 'Robinb'
+    goflow_password = 'Robin1600!'
+
+    driver.get(goflow_url)
+    driver.find_element(By.NAME, "userName").send_keys(goflow_username)
+    driver.find_element(By.NAME, "password").send_keys(goflow_password)
+    driver.find_element(By.XPATH, "//button[normalize-space()='Login']").click()
+
+    driver.find_element(By.XPATH, "//div[text()='Open Orders']").click()
+
+    driver.find_element(By.XPATH, "//span[@class='icon-ex']").click()
+
+    driver.find_element(By.XPATH, "//button[normalize-space()='All Time']").click()
+    driver.find_element(By.XPATH, "//a[@data-bind='text: range'][normalize-space()='Today']").click()
+
+    driver.implicitly_wait(1)
+    no_order_found = driver.find_elements(By.XPATH, "//h2[normalize-space()='No Orders Found']")
+    if len(no_order_found) > 0:
+        raise Exception("No Orders Found")
+    driver.implicitly_wait(15)
+
+    select_all_input = driver.find_element(By.XPATH, "//th//input[@type='checkbox']")
+    actions.move_to_element(select_all_input).perform()
+    sleep(1)
+    select_all_input.click()
+    sleep(1)
+    driver.find_element(By.XPATH,
+                        "//button[@class='button-secondary button-icon icon-download dropdown-toggle tooltip-wrapper']").click()
+    driver.find_element(By.XPATH, "//a[normalize-space()='Export Orders']").click()
+    sleep(1)
+    driver.quit()
+
+
 class SeleniumProcesses:
     def __init__(self):
         chrome_options = webdriver.ChromeOptions()
