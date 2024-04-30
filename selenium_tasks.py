@@ -152,7 +152,22 @@ def _update_order_status(tag_name):
 
 
 def _download_order_info():
-    driver = _init_driver()
+    chrome_options = webdriver.ChromeOptions()
+
+    download_directory = "/home/ubuntu/Downloads/goflow_orders"
+
+    chrome_options.add_experimental_option("prefs", {
+        "download.default_directory": download_directory,
+        "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        "safebrowsing.enabled": False
+    })
+    chrome_options.add_argument("--disable-popup-blocking")
+    # chrome_options.add_argument("--headless")
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    driver.maximize_window()
+    driver.implicitly_wait(15)
+
     actions = ActionChains(driver)
 
     goflow_url = 'https://fb.goflow.com/'
