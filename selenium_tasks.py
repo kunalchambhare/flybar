@@ -107,9 +107,9 @@ def _update_order_status(tag_name):
     driver = _init_driver()
     actions = ActionChains(driver)
 
-    goflow_url = 'https://bistasolutions.goflow.com/'
-    goflow_username = 'robin.bahadur@bistasolutions.com'
-    goflow_password = 'Flyb@r2023'
+    goflow_url = 'https://fb.goflow.com/'
+    goflow_username = 'Robinb'
+    goflow_password = 'Robin1600!'
 
     driver.get(goflow_url)
     driver.find_element(By.NAME, "userName").send_keys(goflow_username)
