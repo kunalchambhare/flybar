@@ -121,7 +121,7 @@ def _update_order_status(tag_name):
     tag_select = driver.find_element(By.XPATH, "//tags-select")
     tag_select.click()
     tag_select.find_element(By.TAG_NAME, "input").send_keys(tag_name)
-    driver.find_element(By.XPATH, "//div[text()='" + tag_name.lower() + "']").click()
+    driver.find_element(By.XPATH, "//div[text()='" + tag_name + "']").click()
     driver.find_element(By.XPATH, "//button[normalize-space()='Filters']").click()
 
     driver.implicitly_wait(1)
