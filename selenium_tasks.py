@@ -184,7 +184,7 @@ def _download_order_info():
     driver.find_element(By.XPATH, "//span[@class='icon-ex']").click()
 
     driver.find_element(By.XPATH, "//button[normalize-space()='All Time']").click()
-    driver.find_element(By.XPATH, "////a[normalize-space()='Past 7 Days']").click()
+    driver.find_element(By.XPATH, "//a[normalize-space()='Past 7 Days']").click()
 
     driver.implicitly_wait(1)
     no_order_found = driver.find_elements(By.XPATH, "//h2[normalize-space()='No Orders Found']")
