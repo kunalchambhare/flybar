@@ -200,7 +200,17 @@ def _download_order_info():
     driver.find_element(By.XPATH,
                         "//button[@class='button-secondary button-icon icon-download dropdown-toggle tooltip-wrapper']").click()
     driver.find_element(By.XPATH, "//a[normalize-space()='Export Orders']").click()
-    sleep(10)
+    sleep(2)
+    while True:
+        downloaded = False
+        for fname in os.listdir(download_directory):
+            if fname.endswith('.crdownload'):
+                sleep(1)
+            else:
+                downloaded = True
+                break
+        if downloaded:
+            break
     driver.quit()
 
 
