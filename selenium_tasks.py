@@ -200,7 +200,7 @@ def _download_order_info():
     driver.find_element(By.XPATH,
                         "//button[@class='button-secondary button-icon icon-download dropdown-toggle tooltip-wrapper']").click()
     driver.find_element(By.XPATH, "//a[normalize-space()='Export Orders']").click()
-    sleep(1)
+    sleep(10)
     driver.quit()
 
 
