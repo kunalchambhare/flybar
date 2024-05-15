@@ -45,7 +45,7 @@ def _get_bank_statements():
     driver.get(url)
     driver.find_element(By.XPATH, "//input[@id='company']").send_keys(company_id)
     driver.find_element(By.XPATH, "//input[@id='user']").send_keys(user_id)
-
+    sleep(1)
     driver.find_element(By.XPATH, "//button[@id='login']").click()
 
     driver.find_element(By.XPATH, "//input[@id='passwordPrompt']").send_keys(password)
@@ -56,28 +56,13 @@ def _get_bank_statements():
 
     table_element = driver.find_element(By.XPATH, "//table[@class='listtable']")
 
-    column_headers = table_element.find_elements(By.TAG_NAME, "th")
-
-    date_column_index = None
-    for index, column_header in enumerate(column_headers):
-        if column_header.text.strip() == "Date":
-            date_column_index = index + 1
-            break
-
     tbody_element = table_element.find_element(By.TAG_NAME, "tbody")
 
-    rows = tbody_element.find_elements(By.TAG_NAME, "tr")
+    target_td = driver.find_element(By.XPATH, "//td[b[contains(text(), 'Daily Download')]]")
 
-    for row in rows:
-        columns_datas = row.find_elements(By.TAG_NAME, "td")
-        td_index = 0
-        for column_data in columns_datas:
-            td_index += 1
-            if td_index == date_column_index:
-                link_element = column_data.find_element(By.TAG_NAME, "a")
-                link_element.click()
-                break
-        break
+    link_element = target_td.find_element(By.XPATH, "./following-sibling::td/a")
+
+    link_element.click()
 
     driver.find_element(By.XPATH, "//a[normalize-space()='Previous Business Day']").click()
     tbody_element.find_element(By.XPATH, "//span[@class='ui-button-text'][normalize-space()='Download']").click()
